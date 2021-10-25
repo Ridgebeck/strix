@@ -39,7 +39,7 @@ class _CallScreenState extends State<CallScreen> {
             // set variable to closing video to avoid
             // changing milestone multiple times
             closing = true;
-            // move to next milestone in database
+
             await NextMilestoneLogic().moveToNextMilestone(roomID: roomID);
             // pop screen when call has been finished
             Navigator.of(context).pop();
