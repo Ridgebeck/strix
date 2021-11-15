@@ -39,14 +39,14 @@ class AvailableAssetEntry {
   String entryName;
   Call? call;
   //List<Call>? archivedCalls;
-  BriefingEntry? briefing;
+  //BriefingEntry? briefing; //TODO: remove
   MissionEntry? mission;
   DataEntry? data;
 
   AvailableAssetEntry({
     required this.entryName,
     this.call,
-    this.briefing,
+    //this.briefing, //TODO: remove
     this.mission,
     this.data,
   });
@@ -62,12 +62,12 @@ class DataEntry {
 
   int length() {
     int length = 0;
-    this.social != null ? length += 1 : length = length;
-    this.messages != null ? length += 1 : length = length;
-    this.images != null ? length += 1 : length = length;
-    this.audioFiles != null ? length += 1 : length = length;
-    this.videos != null ? length += 1 : length = length;
-    this.reports != null ? length += 1 : length = length;
+    social != null ? length += 1 : length = length;
+    messages != null ? length += 1 : length = length;
+    images != null ? length += 1 : length = length;
+    audioFiles != null ? length += 1 : length = length;
+    videos != null ? length += 1 : length = length;
+    reports != null ? length += 1 : length = length;
     return length;
   }
 
@@ -85,29 +85,29 @@ class DataEntry {
   });
 }
 
-class BriefingEntry {
-  List<Person>? profileEntries;
-  String? briefing;
-
-  BriefingEntry({
-    this.profileEntries,
-    this.briefing,
-  });
-}
+// class BriefingEntry {
+//   List<Person>? profileEntries;
+//   String? briefing;
+//
+//   BriefingEntry({
+//     this.profileEntries,
+//     this.briefing,
+//   });
+// }
 
 class MissionEntry {
   String? missionObjective;
   List<GoalAndHints>? goalList;
-  //List<Person>? profileEntries; // move to briefing
-  //String? briefing; // move to briefing
-  List<MapPosition>? mapPositions;
+  List<Person>? profileEntries; // moving here from briefing
+  String? briefing; // moving here from briefing
+  List<MapPosition>? mapPositions; // TODO:Remove
 
   MissionEntry({
     this.missionObjective,
     this.goalList,
-    //this.profileEntries,
-    //this.briefing,
-    this.mapPositions,
+    this.profileEntries,
+    this.briefing,
+    //this.mapPositions,
   });
 }
 

@@ -6,8 +6,8 @@ import 'package:strix/services/service_locator.dart';
 import 'package:strix/services/authorization/authorization_abstract.dart';
 import 'package:strix/ui/screens/icoming_call_screen.dart';
 import 'package:strix/ui/widgets/bottom_tab_bar.dart';
-import 'game_briefing_screen.dart';
 import 'game_mission_screen.dart';
+import 'game_map_screen.dart';
 import 'data_screen.dart';
 import 'chat_screen.dart';
 import 'package:strix/business_logic/logic/waiting_room_logic.dart';
@@ -22,8 +22,7 @@ class MainGameScreen extends StatefulWidget {
   _MainGameScreenState createState() => _MainGameScreenState();
 }
 
-class _MainGameScreenState extends State<MainGameScreen>
-    with SingleTickerProviderStateMixin {
+class _MainGameScreenState extends State<MainGameScreen> with SingleTickerProviderStateMixin {
   late Stream<Room?> roomStream;
   late TabController _tabController;
   final Authorization _authorization = serviceLocator<Authorization>();
@@ -38,7 +37,7 @@ class _MainGameScreenState extends State<MainGameScreen>
   int currentMessages = 0;
   bool newChatMessage = false;
 
-  BriefingEntry? currentBriefingEntry;
+  //BriefingEntry? currentBriefingEntry; //TODO: remove
   MissionEntry? currentMissionEntry;
   DataEntry? currentDataEntry;
 
@@ -133,15 +132,11 @@ class _MainGameScreenState extends State<MainGameScreen>
 
           // find current progress entry
           AvailableAssetEntry currentEntry = snapData.availableAssets
-              .singleWhere(
-                  (element) => element.entryName == snapData.gameProgress);
+              .singleWhere((element) => element.entryName == snapData.gameProgress);
 
-          print("--------- LAST ENTRY: ${lastEntry.entryName}");
-          print("--------- CURRENT ENTRY: ${currentEntry.entryName}");
           // check if currentEntry is different from lastEntry
           // prevents opening calls multiple times
           if (currentEntry != lastEntry) {
-            print("--------- CURRENT ENTRY HAS CHANGED!!!");
             //set last entry to current one
             lastEntry = currentEntry;
             // check if current entry is a call
@@ -151,8 +146,7 @@ class _MainGameScreenState extends State<MainGameScreen>
               WidgetsBinding.instance!.addPostFrameCallback((_) {
                 print(currentEntry.call!.callFile);
                 if (snapData.host == _authorization.getCurrentUserID()) {
-                  Navigator.of(context).pushNamed(IncomingCallScreen.routeId,
-                      arguments: snapData);
+                  Navigator.of(context).pushNamed(IncomingCallScreen.routeId, arguments: snapData);
                 } else {
                   showDialog(
                     context: context,
@@ -177,29 +171,34 @@ class _MainGameScreenState extends State<MainGameScreen>
               }
 
               // check if briefing data was not null
-              if (currentBriefingEntry != null) {
-                print('checking profile entries');
-                print(currentBriefingEntry!.profileEntries!.length);
-                print(currentEntry.briefing!.profileEntries!.length);
-                // check if new profiles are present
-                if (currentEntry.briefing!.profileEntries!.length >
-                    currentBriefingEntry!.profileEntries!.length) {
-                  newBriefingData = true;
-                } else {
-                  newBriefingData = false;
-                }
-              }
+              // TODO: REMOVE!
+              // if (currentBriefingEntry != null) {
+              //   if (currentBriefingEntry!.profileEntries != null) {
+              //     print('checking profile entries');
+              //     print(currentBriefingEntry!.profileEntries!.length);
+              //     print(currentEntry.briefing!.profileEntries!.length);
+              //     // check if new profiles are present
+              //     if (currentEntry.briefing!.profileEntries!.length >
+              //         currentBriefingEntry!.profileEntries!.length) {
+              //       newBriefingData = true;
+              //     } else {
+              //       newBriefingData = false;
+              //     }
+              //   }
+              // }
 
               // check if mission data was not null
               if (currentMissionEntry != null) {
-                // check if number of goals or number of hints for current goal has changed
-                if (currentMissionEntry!.goalList!.length ==
-                        currentEntry.mission!.goalList!.length &&
-                    currentMissionEntry!.goalList!.first.hints!.length ==
-                        currentEntry.mission!.goalList!.first.hints!.length) {
-                  newMissionData = false;
-                } else {
-                  newMissionData = true;
+                if (currentMissionEntry!.goalList != null) {
+                  // check if number of goals or number of hints for current goal has changed
+                  if (currentMissionEntry!.goalList!.length ==
+                          currentEntry.mission!.goalList!.length &&
+                      currentMissionEntry!.goalList!.first.hints!.length ==
+                          currentEntry.mission!.goalList!.first.hints!.length) {
+                    newMissionData = false;
+                  } else {
+                    newMissionData = true;
+                  }
                 }
               }
 
@@ -219,8 +218,7 @@ class _MainGameScreenState extends State<MainGameScreen>
                       print('new images!');
                     }
                     // otherwise only highlight if there are more entries then before
-                    else if (currentEntry.data!.images!.length >
-                        currentDataEntry!.images!.length) {
+                    else if (currentEntry.data!.images!.length > currentDataEntry!.images!.length) {
                       print('more images!');
                       newData.newImages = true;
                     }
@@ -249,8 +247,7 @@ class _MainGameScreenState extends State<MainGameScreen>
                       print('new social data!');
                     }
                     // otherwise only highlight if there are more entries then before
-                    else if (currentEntry.data!.social!.length >
-                        currentDataEntry!.social!.length) {
+                    else if (currentEntry.data!.social!.length > currentDataEntry!.social!.length) {
                       print('more social data!');
                       newData.newSocial = true;
                     }
@@ -258,7 +255,7 @@ class _MainGameScreenState extends State<MainGameScreen>
                 }
               }
               // save current briefing entry
-              currentBriefingEntry = currentEntry.briefing;
+              //currentBriefingEntry = currentEntry.briefing; // TODO: REMOVE!
               // save current mission entry
               currentMissionEntry = currentEntry.mission;
               // save current data entry
@@ -267,14 +264,19 @@ class _MainGameScreenState extends State<MainGameScreen>
           }
 
           return WillPopScope(
+            // don't allow moving back via system default
             onWillPop: () async => false,
             child: Scaffold(
+              backgroundColor: Colors.grey[900],
               body: TabBarView(
                 controller: _tabController,
                 physics: const BouncingScrollPhysics(),
                 children: [
-                  GameBriefingScreen(briefingData: currentEntry.briefing),
-                  GameMissionScreen(missionData: currentEntry.mission),
+                  GameMissionScreen(
+                    //briefingData: currentEntry.briefing,
+                    missionData: currentEntry.mission,
+                  ),
+                  GameMapScreen(missionData: currentEntry.mission),
                   DataScreen(
                     assets: currentEntry,
                     newData: newData,
@@ -291,6 +293,7 @@ class _MainGameScreenState extends State<MainGameScreen>
                 newData: newData.anyNewData(),
                 newChatData: newChatMessage,
               ),
+              extendBody: true,
               //backgroundColor: kBackgroundColorLight,
             ),
           );

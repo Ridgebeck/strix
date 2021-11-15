@@ -1,9 +1,16 @@
+//import 'dart:ui';
+import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:strix/config/constants.dart';
 
-Color kSelectedTabColor = Colors.white;
-Color kUnselectedTabColor = Colors.blueGrey;
+// TODO: make constants or add to theme
+const Color kSelectedTabColor = Colors.white;
+const Color kUnselectedTabColor = Colors.blueGrey;
+Color glassColor = Colors.black.withOpacity(0.25);
+const double kGlassBlurriness = 15.0;
+const Radius kBottomBarRadius = Radius.circular(15.0);
 
 class BottomTabBar extends StatelessWidget {
   final TabController tabController;
@@ -23,41 +30,65 @@ class BottomTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TabBar(
-      indicatorColor: kAccentColor,
-      labelColor: kSelectedTabColor,
-      unselectedLabelColor: kUnselectedTabColor,
-      controller: tabController,
-      tabs: [
-        SelectableTab(
-          tabController: tabController,
-          iconData: Icons.folder_open,
-          text: 'Briefing',
-          newData: newBriefingData,
-          index: 0,
+    return Theme(
+      data: ThemeData(
+        highlightColor: kAccentColor.withOpacity(0.2),
+        splashColor: kAccentColor.withOpacity(0.2),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(
+          top: kBottomBarRadius,
         ),
-        SelectableTab(
-          tabController: tabController,
-          iconData: Icons.list,
-          text: 'Mission',
-          newData: newMissionData,
-          index: 1,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: kGlassBlurriness,
+            sigmaY: kGlassBlurriness,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            elevation: 2.0,
+            child: Container(
+              color: glassColor,
+              child: TabBar(
+                indicatorColor: kAccentColor,
+                labelColor: kSelectedTabColor,
+                unselectedLabelColor: kUnselectedTabColor,
+                controller: tabController,
+                tabs: [
+                  SelectableTab(
+                    tabController: tabController,
+                    iconData: Icons.folder_open,
+                    text: 'Mission',
+                    newData: newBriefingData,
+                    index: 0,
+                  ),
+                  SelectableTab(
+                    tabController: tabController,
+                    iconData: Icons.map,
+                    text: 'Map',
+                    newData: newMissionData,
+                    index: 1,
+                  ),
+                  SelectableTab(
+                    tabController: tabController,
+                    iconData: Icons.cloud_outlined,
+                    text: 'Data',
+                    newData: newData,
+                    index: 2,
+                  ),
+                  SelectableTab(
+                    tabController: tabController,
+                    iconData: Icons.chat_bubble_outline,
+                    text: 'Chat',
+                    newData: newChatData,
+                    index: 3,
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        SelectableTab(
-          tabController: tabController,
-          iconData: Icons.cloud_outlined,
-          text: 'Data',
-          newData: newData,
-          index: 2,
-        ),
-        SelectableTab(
-          tabController: tabController,
-          iconData: Icons.chat_bubble_outline,
-          text: 'Chat',
-          newData: newChatData,
-          index: 3,
-        ),
-      ],
+      ),
     );
   }
 }

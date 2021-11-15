@@ -37,12 +37,10 @@ class GameDocFirestore implements GameDoc {
       else {
         // try to fetch settings document
         // TODO: replace mission1 with (selectable) gameID
-        DocumentSnapshot settingsSnapshot =
-            await settings.doc('mission1').get();
+        DocumentSnapshot settingsSnapshot = await settings.doc('mission1').get();
 
         // create first player entry
-        Map<String, dynamic> firstPlayerValues =
-            settingsSnapshot[kPlayersField][0];
+        Map<String, dynamic> firstPlayerValues = settingsSnapshot[kPlayersField][0];
         Map<String, dynamic> playerEntry = {
           'uid': _authorization.getCurrentUserID(),
           'name': firstPlayerValues['name'],
@@ -74,18 +72,14 @@ class GameDocFirestore implements GameDoc {
     print('trying to start stream!');
     // Stream of Document Snapshots from database
     Stream<DocumentSnapshot<Map<String, dynamic>>> docRefStream =
-        FirebaseFirestore.instance
-            .collection(kRoomsCollection)
-            .doc(roomID)
-            .snapshots();
+        FirebaseFirestore.instance.collection(kRoomsCollection).doc(roomID).snapshots();
 
     // return converted string
     return docRefStream.map((docSnap) => docSnapToRoom(docSnap: docSnap));
   }
 
   @override
-  Room? docSnapToRoom(
-      {required DocumentSnapshot<Map<String, dynamic>> docSnap}) {
+  Room? docSnapToRoom({required DocumentSnapshot<Map<String, dynamic>> docSnap}) {
     try {
       Map<String, dynamic>? snapData = docSnap.data();
       // check if snapshot has data
@@ -104,8 +98,7 @@ class GameDocFirestore implements GameDoc {
               uid: currentPlayer['uid'],
               name: currentPlayer['name'],
               color: HexColor.fromHex(currentPlayer['color']),
-              iconData: IconData(currentPlayer['iconNumber'],
-                  fontFamily: 'MaterialIcons'),
+              iconData: IconData(currentPlayer['iconNumber'], fontFamily: 'MaterialIcons'),
               profileImage: currentPlayer['profileImage'],
             ),
           );
@@ -118,8 +111,7 @@ class GameDocFirestore implements GameDoc {
 
         // convert available assets into standardized format
         print('convert assets');
-        List<AvailableAssetEntry> availableAssets =
-            _convertAvailableAssets(snapData);
+        List<AvailableAssetEntry> availableAssets = _convertAvailableAssets(snapData);
 
         print('create room from stream');
         // convert all values into room class
@@ -130,13 +122,11 @@ class GameDocFirestore implements GameDoc {
           players: playerList,
           minimumPlayers: snapData[kSettingsReference]['minimumPlayers'],
           maximumPlayers: snapData[kSettingsReference]['maximumPlayers'],
-          maximumInputCharacters: snapData[kSettingsReference]
-              ['maximumInputCharacters'],
+          maximumInputCharacters: snapData[kSettingsReference]['maximumInputCharacters'],
           opened: snapData['opened'].toDate(),
           chat: chat,
           started: snapData['started'],
-          availableAssets:
-              availableAssets, //snapData[kSettingsReference][kSettingsStatusField],
+          availableAssets: availableAssets, //snapData[kSettingsReference][kSettingsStatusField],
           host: snapData['host'],
         );
         return currentRoomData;
@@ -148,11 +138,9 @@ class GameDocFirestore implements GameDoc {
     }
   }
 
-  List<AvailableAssetEntry> _convertAvailableAssets(
-      Map<String, dynamic> snapData) {
+  List<AvailableAssetEntry> _convertAvailableAssets(Map<String, dynamic> snapData) {
     List<AvailableAssetEntry> availableAssets = [];
-    List<dynamic> availableAssetsRaw =
-        snapData[kSettingsReference][kSettingsStatusField];
+    List<dynamic> availableAssetsRaw = snapData[kSettingsReference][kSettingsStatusField];
     late AvailableAssetEntry assetEntry;
 
     print('CONVERTING ASSETS');
@@ -167,8 +155,7 @@ class GameDocFirestore implements GameDoc {
         value.forEach((assetEntryField, fieldData) {
           // convert call if there is one
           if (assetEntryField == 'call') {
-            Map<String, dynamic> callMap =
-                snapData[kSettingsReference]['calls'][value['call']];
+            Map<String, dynamic> callMap = snapData[kSettingsReference]['calls'][value['call']];
             Map<String, dynamic> callerMap =
                 snapData[kSettingsReference]['protagonists'][callMap['person']];
             Person caller = Person(
@@ -193,8 +180,7 @@ class GameDocFirestore implements GameDoc {
             assetEntry.data = DataEntry();
             // go through data entry
             fieldData.forEach((dataField, dataFieldData) {
-              if (dataField == 'social' &&
-                  snapData[kSettingsReference]['hasInstagram'] == false) {
+              if (dataField == 'social' && snapData[kSettingsReference]['hasInstagram'] == false) {
                 print('Found social entry and group does not have insta');
                 assetEntry.data!.social = List.from(dataFieldData);
               }
@@ -221,58 +207,10 @@ class GameDocFirestore implements GameDoc {
             });
           }
 
-          // convert briefing entry
-          else if (assetEntryField == 'briefing') {
-            print('Found briefing entry');
-            assetEntry.briefing = BriefingEntry();
-            // add briefing to mission entry
-            assetEntry.briefing!.briefing =
-                snapData[kSettingsReference][kBriefingReference];
-
-            // go through all fields of briefing entry
-            fieldData.forEach((briefingField, briefingFieldData) {
-              // add profiles of people
-              if (briefingField == 'profiles' &&
-                  List.from(briefingFieldData).isNotEmpty) {
-                print('Found profiles entry');
-
-                List<Person> profiles = [];
-                // go through all profiles
-                briefingFieldData.forEach((profileName) {
-                  print(snapData[kSettingsReference]['protagonists']
-                      [profileName]['firstName']);
-
-                  // create person from reference string
-                  Person currentPerson = Person(
-                    firstName: snapData[kSettingsReference]['protagonists']
-                        [profileName]['firstName'],
-                    lastName: snapData[kSettingsReference]['protagonists']
-                        [profileName]['lastName'],
-                    title: snapData[kSettingsReference]['protagonists']
-                        [profileName]['title'],
-                    profileImage: snapData[kSettingsReference]['protagonists']
-                        [profileName]['profileImage'],
-                    age: snapData[kSettingsReference]['protagonists']
-                        [profileName]['age'],
-                    profession: snapData[kSettingsReference]['protagonists']
-                        [profileName]['profession'],
-                    hobbies: snapData[kSettingsReference]['protagonists']
-                        [profileName]['hobbies'],
-                    instagram: snapData[kSettingsReference]['protagonists']
-                        [profileName]['instagram'],
-                  );
-
-                  profiles.add(currentPerson);
-                });
-                assetEntry.briefing!.profileEntries = profiles;
-                print("all profiles converted");
-              }
-            });
-          }
-
           // convert mission entry
           else if (assetEntryField == 'mission') {
             print('Found mission entry');
+            // create empty mission entry
             assetEntry.mission = MissionEntry();
 
             int activeGoal = 0;
@@ -287,6 +225,38 @@ class GameDocFirestore implements GameDoc {
               if (missionField == 'completedGoal') {
                 print('completed goal found!');
                 completedGoal = missionFieldData;
+              }
+              // convert profiles
+              if (missionField == 'profiles') {
+                // define empty lists to add profile entries in correct format
+                List<Person> profileEntries = [];
+
+                // go through profile list
+                missionFieldData.forEach((profile) {
+                  // convert all profile entries (maps/dicts) into person class
+                  profile.forEach((profileName, profileValues) {
+                    Person currentProfile = Person(
+                      firstName: profileValues['firstName'],
+                      lastName: profileValues['lastName'],
+                      title: profileValues['title'],
+                      profession: profileValues['profession'],
+                      age: profileValues['age'],
+                      profileImage: profileValues['profileImage'],
+                      instagram: profileValues['instagram'],
+                      hobbies: profileValues['hobbies'],
+                    );
+                    // add profile to list
+                    profileEntries.add(currentProfile);
+                  });
+                });
+
+                // add converted lists to mission section of asset entry
+                assetEntry.mission!.profileEntries = profileEntries;
+                print('All profiles converted!');
+              }
+              // add briefing to mission data
+              if (missionField == 'briefing') {
+                assetEntry.mission!.briefing = missionFieldData;
               }
             });
 
@@ -312,8 +282,7 @@ class GameDocFirestore implements GameDoc {
                           ? true
                           : false,
                   hints: List.from(
-                    snapData[kSettingsReference][kHintsReference]['goal$i'] ??
-                        [],
+                    snapData[kSettingsReference][kHintsReference]['goal$i'] ?? [],
                   ),
                 ),
               );
@@ -323,10 +292,8 @@ class GameDocFirestore implements GameDoc {
                   MapPosition(
                     markerKey: GlobalKey(),
                     markerText: firestoreGoalsList[i]['mapPoint']['name'],
-                    positionX: firestoreGoalsList[i]['mapPoint']['positionX']
-                        .toDouble(),
-                    positionY: firestoreGoalsList[i]['mapPoint']['positionY']
-                        .toDouble(),
+                    positionX: firestoreGoalsList[i]['mapPoint']['positionX'].toDouble(),
+                    positionY: firestoreGoalsList[i]['mapPoint']['positionY'].toDouble(),
                     currentGoal: currentMapPoint,
                   ),
                 );
@@ -350,8 +317,7 @@ class GameDocFirestore implements GameDoc {
     return availableAssets;
   }
 
-  Chat _convertChatData(
-      {Map<String, dynamic>? chatData, Map<String, dynamic>? protagonists}) {
+  Chat _convertChatData({Map<String, dynamic>? chatData, Map<String, dynamic>? protagonists}) {
     List<Message> chatList = [];
     print('CONVERTING CHAT');
 
@@ -379,8 +345,7 @@ class GameDocFirestore implements GameDoc {
               name: currentAuthor['name'],
               uid: currentAuthor['uid'],
               color: HexColor.fromHex(currentAuthor['color']),
-              iconData: IconData(currentAuthor['iconNumber'],
-                  fontFamily: 'MaterialIcons'),
+              iconData: IconData(currentAuthor['iconNumber'], fontFamily: 'MaterialIcons'),
             );
           } else {
             print('Person Message');
@@ -599,8 +564,7 @@ class GameDocFirestore implements GameDoc {
               // save UID of host
               kHostField: _authorization.getCurrentUserID(),
               // change status to first milestone
-              kGameStatusField:
-                  snapData['settings'][kSettingsStatusField][0].keys.first,
+              kGameStatusField: snapData['settings'][kSettingsStatusField][0].keys.first,
             });
           }
           return true;
@@ -632,8 +596,8 @@ class GameDocFirestore implements GameDoc {
         } else {
           // find index of current milestone
           // find current progress entry
-          AvailableAssetEntry currentEntry = room.availableAssets
-              .singleWhere((element) => element.entryName == room.gameProgress);
+          AvailableAssetEntry currentEntry =
+              room.availableAssets.singleWhere((element) => element.entryName == room.gameProgress);
 
           int currentIndex = room.availableAssets.indexOf(currentEntry);
           print('INDEX: $currentIndex');
@@ -641,10 +605,8 @@ class GameDocFirestore implements GameDoc {
           // update room document
           transaction.update(rooms.doc(roomID), {
             // change status to next milestone
-            kGameStatusField: snapData['settings'][kSettingsStatusField]
-                    [currentIndex + 1]
-                .keys
-                .first,
+            kGameStatusField:
+                snapData['settings'][kSettingsStatusField][currentIndex + 1].keys.first,
           });
         }
       }
