@@ -14,18 +14,18 @@ const Radius kBottomBarRadius = Radius.circular(15.0);
 
 class BottomTabBar extends StatelessWidget {
   final TabController tabController;
-  final bool newBriefingData;
-  final bool newMissionData;
-  final bool newData;
-  final bool newChatData;
+  //final bool newBriefingData;
+  //final bool newMissionData;
+  //final bool newData;
+  //final bool newChatData;
 
   const BottomTabBar({
     Key? key,
     required this.tabController,
-    required this.newBriefingData,
-    required this.newMissionData,
-    required this.newData,
-    required this.newChatData,
+    //required this.newBriefingData,
+    //required this.newMissionData,
+    //required this.newData,
+    //required this.newChatData,
   }) : super(key: key);
 
   @override
@@ -59,28 +59,28 @@ class BottomTabBar extends StatelessWidget {
                     tabController: tabController,
                     iconData: Icons.folder_open,
                     text: 'Mission',
-                    newData: newBriefingData,
+                    //newData: newBriefingData,
                     index: 0,
                   ),
                   SelectableTab(
                     tabController: tabController,
                     iconData: Icons.map,
                     text: 'Map',
-                    newData: newMissionData,
+                    //newData: newMissionData,
                     index: 1,
                   ),
                   SelectableTab(
                     tabController: tabController,
                     iconData: Icons.cloud_outlined,
                     text: 'Data',
-                    newData: newData,
+                    //newData: newData,
                     index: 2,
                   ),
                   SelectableTab(
                     tabController: tabController,
                     iconData: Icons.chat_bubble_outline,
                     text: 'Chat',
-                    newData: newChatData,
+                    //newData: newChatData,
                     index: 3,
                   ),
                 ],
@@ -99,12 +99,12 @@ class SelectableTab extends StatelessWidget {
     required this.tabController,
     required this.iconData,
     required this.text,
-    required this.newData,
+    //required this.newData,
     required this.index,
   }) : super(key: key);
 
   final TabController tabController;
-  final bool newData;
+  //final bool newData;
   final String text;
   final int index;
   final IconData iconData;
@@ -117,21 +117,19 @@ class SelectableTab extends StatelessWidget {
         children: [
           Icon(
             iconData,
-            color: tabController.index == index
-                ? kSelectedTabColor
-                : newData
-                    ? kAccentColor
-                    : kUnselectedTabColor,
+            color: tabController.index == index ? kSelectedTabColor : kUnselectedTabColor,
+            // newData
+            //         ? kAccentColor
+            //         : kUnselectedTabColor,
           ),
           Positioned(
             right: -10.0,
             top: -10.0,
             child: Visibility(
-              visible: tabController.index == index
-                  ? false
-                  : newData
-                      ? true
-                      : false,
+              visible: tabController.index == index ? false : false,
+              // newData
+              //         ? true
+              //         : false,
               child: Container(
                 width: 10.0,
                 height: 10.0,
@@ -147,11 +145,10 @@ class SelectableTab extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          color: tabController.index == index
-              ? kSelectedTabColor
-              : newData
-                  ? kAccentColor
-                  : kUnselectedTabColor,
+          color: tabController.index == index ? kSelectedTabColor : kUnselectedTabColor,
+          // newData
+          //         ? kAccentColor
+          //         : kUnselectedTabColor,
         ),
       ),
     );

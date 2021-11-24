@@ -19,9 +19,7 @@ class Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: fromTeam
-          ? const EdgeInsets.only(left: 10.0)
-          : const EdgeInsets.only(right: 10.0),
+      padding: fromTeam ? const EdgeInsets.only(left: 10.0) : const EdgeInsets.only(right: 10.0),
       child: Container(
         height: fromTeam
             ? MediaQuery.of(context).size.width * coloredIconSize
@@ -37,8 +35,7 @@ class Avatar extends StatelessWidget {
             : BoxDecoration(
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                    image: AssetImage('assets/profile_pictures/' +
-                        message.author.profileImage),
+                    image: AssetImage('assets/profile_pictures/' + message.author.profileImage),
                     fit: BoxFit.cover),
               ),
         child: fromTeam
@@ -49,7 +46,7 @@ class Avatar extends StatelessWidget {
               )
             : RawMaterialButton(
                 onPressed: () {
-                  print(message.author);
+                  debugPrint(message.author);
 
                   Navigator.of(context).pushNamed(
                     ProfileScreen.routeId,

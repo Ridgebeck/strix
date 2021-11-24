@@ -34,19 +34,26 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   #cupertino_icons: ^1.0.2
+  # state management and saving
   get_it: ^7.2.0
-  firebase_core: ^1.8.0 #1.0.2
-  cloud_firestore: ^2.5.4 #2.2.0
-  firebase_auth: ^3.1.4 #1.0.1
+  shared_preferences: ^2.0.8
+  # database
+  firebase_core: ^1.8.0
+  cloud_firestore: ^2.5.4
+  firebase_auth: ^3.1.4
   #firebase_analytics: ^7.0.1
-  shared_preferences: ^2.0.8 #2.0.5
-  video_player: ^2.2.5 #2.1.0
+
+  # media and animations
+  video_player: ^2.2.5
   #flutter_ringtone_player: ^3.0.0 #warning: deprecated version of Android embedding
-  simple_animations: ^4.0.1 #3.0.3
-  wakelock: ^0.5.6 #0.5.0+2
   photo_view: ^0.13.0
-  expandable: ^5.0.1
-  url_launcher: ^6.0.12 #6.0.6
+  carousel_slider: ^4.0.0
+  url_launcher: ^6.0.12
+  simple_animations: ^4.0.1
+  #expandable: ^5.0.1
+
+  wakelock: ^0.5.6 #0.5.0+2
+  tuple: ^2.0.0
 
   # icons, fonts, etc.
   font_awesome_flutter: ^9.2.0
@@ -92,10 +99,12 @@ flutter:
     #    - assets/map/10/163/
     #    - assets/map/11/326/
     #    - assets/map/11/327/
+    - assets/map/12/652/
     - assets/map/12/653/
     - assets/map/12/654/
     - assets/map/12/655/
     - assets/map/12/656/
+    - assets/map/13/1305/
     - assets/map/13/1306/
     - assets/map/13/1307/
     - assets/map/13/1308/
@@ -103,7 +112,9 @@ flutter:
     - assets/map/13/1310/
     - assets/map/13/1311/
     - assets/map/13/1312/
-    - assets/map/13/1311/
+    - assets/map/13/1313/
+    - assets/map/14/2611/
+    - assets/map/14/2612/
     - assets/map/14/2613/
     - assets/map/14/2614/
     - assets/map/14/2615/
@@ -117,6 +128,12 @@ flutter:
     - assets/map/14/2623/
     - assets/map/14/2624/
     - assets/map/14/2625/
+    - assets/map/14/2626/
+    - assets/map/14/2627/
+    - assets/map/15/5222/
+    - assets/map/15/5223/
+    - assets/map/15/5224/
+    - assets/map/15/5225/
     - assets/map/15/5226/
     - assets/map/15/5227/
     - assets/map/15/5228/
@@ -142,6 +159,19 @@ flutter:
     - assets/map/15/5248/
     - assets/map/15/5249/
     - assets/map/15/5250/
+    - assets/map/15/5251/
+    - assets/map/15/5252/
+    - assets/map/15/5253/
+    - assets/map/15/5254/
+    - assets/map/15/5255/
+    - assets/map/16/10445/
+    - assets/map/16/10446/
+    - assets/map/16/10447/
+    - assets/map/16/10448/
+    - assets/map/16/10449/
+    - assets/map/16/10450/
+    - assets/map/16/10451/
+    - assets/map/16/10452/
     - assets/map/16/10453/
     - assets/map/16/10454/
     - assets/map/16/10455/
@@ -191,6 +221,17 @@ flutter:
     - assets/map/16/10499/
     - assets/map/16/10500/
     - assets/map/16/10501/
+    - assets/map/16/10502/
+    - assets/map/16/10503/
+    - assets/map/16/10504/
+    - assets/map/16/10505/
+    - assets/map/16/10506/
+    - assets/map/16/10507/
+    - assets/map/16/10508/
+    - assets/map/16/10509/
+    - assets/map/16/10510/
+    - assets/map/16/10511/
+
       #    - assets/map/17/20926/
       #    - assets/map/17/20927/
       #    - assets/map/17/20928/

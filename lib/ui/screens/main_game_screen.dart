@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:strix/business_logic/classes/new_data.dart';
+import 'package:strix/business_logic/classes/marker.dart';
 import 'package:strix/business_logic/classes/room.dart';
-import 'package:strix/config/constants.dart';
+import 'package:strix/business_logic/logic/map_logic.dart';
 import 'package:strix/services/service_locator.dart';
 import 'package:strix/services/authorization/authorization_abstract.dart';
 import 'package:strix/ui/screens/icoming_call_screen.dart';
@@ -22,27 +22,19 @@ class MainGameScreen extends StatefulWidget {
   _MainGameScreenState createState() => _MainGameScreenState();
 }
 
-class _MainGameScreenState extends State<MainGameScreen> with SingleTickerProviderStateMixin {
+class _MainGameScreenState extends State<MainGameScreen> with TickerProviderStateMixin {
   late Stream<Room?> roomStream;
   late TabController _tabController;
   final Authorization _authorization = serviceLocator<Authorization>();
   AvailableAssetEntry lastEntry = AvailableAssetEntry(entryName: "lastEntry");
   BuildContext? dialogContext;
 
-  bool newBriefingData = false;
-  bool newMissionData = false;
-
-  NewData newData = NewData();
-
-  int currentMessages = 0;
-  bool newChatMessage = false;
-
-  //BriefingEntry? currentBriefingEntry; //TODO: remove
   MissionEntry? currentMissionEntry;
   DataEntry? currentDataEntry;
 
   @override
   void initState() {
+    //_gameState.setNavKey(navKey);
     super.initState();
     roomStream = WaitingRoomLogic().roomDocStream(widget.roomID);
     _tabController = TabController(length: 4, vsync: this);
@@ -55,54 +47,26 @@ class _MainGameScreenState extends State<MainGameScreen> with SingleTickerProvid
     }
     if (_tabController.indexIsChanging == false) {
       if (_tabController.index == 0) {
-        print('INDEX 0!');
+        debugPrint('INDEX 0!');
         // reset briefing data indicator
-        newBriefingData = false;
+        //newBriefingData = false;
       }
       if (_tabController.index == 1) {
-        print('INDEX 1!');
+        debugPrint('INDEX 1!');
         // reset mission data indicator
-        newMissionData = false;
+        //newMissionData = false;
       }
       if (_tabController.index == 2) {
-        print('INDEX 2!');
+        debugPrint('INDEX 2!');
       }
       if (_tabController.index == 3) {
-        print('INDEX 3!');
+        debugPrint('INDEX 3!');
         // reset chat data indicator
-        newChatMessage = false;
+        //newChatMessage = false;
       }
     }
 
     setState(() {});
-  }
-
-  void resetNewData(String category) {
-    print('reset function invoked!');
-    print(category);
-    switch (category) {
-      case DataSelection.images:
-        {
-          newData.newImages = false;
-        }
-        break;
-      case DataSelection.messages:
-        {
-          newData.newMessages = false;
-        }
-        break;
-      case DataSelection.social:
-        {
-          newData.newSocial = false;
-        }
-        break;
-      // TODO: default category error handling
-      default:
-        {
-          print('reset category not found!');
-        }
-        break;
-    }
   }
 
   @override
@@ -118,17 +82,17 @@ class _MainGameScreenState extends State<MainGameScreen> with SingleTickerProvid
       builder: (BuildContext context, AsyncSnapshot<Room?> snapshot) {
         Room? snapData = snapshot.data;
         if (snapData == null) {
-          print('ERROR - data is null');
+          debugPrint('ERROR - data is null');
           // todo:error handling when data is null
           return Container();
         } else {
-          // check if new message was added
-          if (currentMessages != snapData.chat.messages.length) {
-            currentMessages = snapData.chat.messages.length;
-            newChatMessage = true;
-          } else {
-            newChatMessage = false;
-          }
+          // // check if new message was added
+          // if (currentMessages != snapData.chat.messages.length) {
+          //   currentMessages = snapData.chat.messages.length;
+          //   newChatMessage = true;
+          // } else {
+          //   newChatMessage = false;
+          // }
 
           // find current progress entry
           AvailableAssetEntry currentEntry = snapData.availableAssets
@@ -144,7 +108,7 @@ class _MainGameScreenState extends State<MainGameScreen> with SingleTickerProvid
               // add callback to check for gameProgress change
               // after every frame and move to call screen
               WidgetsBinding.instance!.addPostFrameCallback((_) {
-                print(currentEntry.call!.callFile);
+                debugPrint(currentEntry.call!.callFile);
                 if (snapData.host == _authorization.getCurrentUserID()) {
                   Navigator.of(context).pushNamed(IncomingCallScreen.routeId, arguments: snapData);
                 } else {
@@ -170,92 +134,26 @@ class _MainGameScreenState extends State<MainGameScreen> with SingleTickerProvid
                 dialogContext = null;
               }
 
-              // check if briefing data was not null
-              // TODO: REMOVE!
-              // if (currentBriefingEntry != null) {
-              //   if (currentBriefingEntry!.profileEntries != null) {
-              //     print('checking profile entries');
-              //     print(currentBriefingEntry!.profileEntries!.length);
-              //     print(currentEntry.briefing!.profileEntries!.length);
-              //     // check if new profiles are present
-              //     if (currentEntry.briefing!.profileEntries!.length >
-              //         currentBriefingEntry!.profileEntries!.length) {
-              //       newBriefingData = true;
-              //     } else {
-              //       newBriefingData = false;
-              //     }
-              //   }
-              // }
+              // check if entry has map data
+              if (currentEntry.map != null) {
+                // check for all persons with a path longer than 1 point
+                List<PersonMarkerData> personsMoving = currentEntry.map!.personMarkerList
+                    .where((element) => element.positionPath.length > 1)
+                    .toList();
+                // TODO: currently only using one path (first found) --> allow multiple?
+                if (personsMoving.isNotEmpty) {
+                  PersonMarkerData personData = personsMoving[0];
 
-              // check if mission data was not null
-              if (currentMissionEntry != null) {
-                if (currentMissionEntry!.goalList != null) {
-                  // check if number of goals or number of hints for current goal has changed
-                  if (currentMissionEntry!.goalList!.length ==
-                          currentEntry.mission!.goalList!.length &&
-                      currentMissionEntry!.goalList!.first.hints!.length ==
-                          currentEntry.mission!.goalList!.first.hints!.length) {
-                    newMissionData = false;
-                  } else {
-                    newMissionData = true;
-                  }
+                  debugPrint("${personData.person.firstName} is moving!");
+
+                  // start calculating the move along path on map
+                  const MovingAnimation().createState().startMovingAnimation(
+                        roomID: widget.roomID,
+                        personData: personData,
+                      );
                 }
               }
 
-              // check if data was not null
-              if (currentDataEntry != null) {
-                // do not highlight when data is null
-                if (currentEntry.data == null) {
-                  // reset everything to false
-                  newData = NewData();
-                } else {
-                  // TODO: use loop to go through all properties (mirror?)
-                  // check if images are not null
-                  if (currentEntry.data!.images != null) {
-                    // if there were no entries before always highlight as new
-                    if (currentDataEntry!.images == null) {
-                      newData.newImages = true;
-                      print('new images!');
-                    }
-                    // otherwise only highlight if there are more entries then before
-                    else if (currentEntry.data!.images!.length > currentDataEntry!.images!.length) {
-                      print('more images!');
-                      newData.newImages = true;
-                    }
-                  }
-
-                  // check if messages are not null
-                  if (currentEntry.data!.messages != null) {
-                    // if there were no entries before always highlight as new
-                    if (currentDataEntry!.messages == null) {
-                      newData.newMessages = true;
-                      print('new messages!');
-                    }
-                    // otherwise only highlight if there are more entries then before
-                    else if (currentEntry.data!.messages!.length >
-                        currentDataEntry!.messages!.length) {
-                      print('more messages!');
-                      newData.newMessages = true;
-                    }
-                  }
-
-                  // check if social is not null
-                  if (currentEntry.data!.social != null) {
-                    // if there were no entries before always highlight as new
-                    if (currentDataEntry!.social == null) {
-                      newData.newSocial = true;
-                      print('new social data!');
-                    }
-                    // otherwise only highlight if there are more entries then before
-                    else if (currentEntry.data!.social!.length > currentDataEntry!.social!.length) {
-                      print('more social data!');
-                      newData.newSocial = true;
-                    }
-                  }
-                }
-              }
-              // save current briefing entry
-              //currentBriefingEntry = currentEntry.briefing; // TODO: REMOVE!
               // save current mission entry
               currentMissionEntry = currentEntry.mission;
               // save current data entry
@@ -270,31 +168,32 @@ class _MainGameScreenState extends State<MainGameScreen> with SingleTickerProvid
               backgroundColor: Colors.grey[900],
               body: TabBarView(
                 controller: _tabController,
-                physics: const BouncingScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 children: [
                   GameMissionScreen(
-                    //briefingData: currentEntry.briefing,
                     missionData: currentEntry.mission,
                   ),
-                  GameMapScreen(missionData: currentEntry.mission),
+                  GameMapScreen(
+                    mapData: currentEntry.map,
+                    roomID: widget.roomID,
+                  ),
                   DataScreen(
                     assets: currentEntry,
-                    newData: newData,
-                    resetFunction: resetNewData,
                   ),
-                  //ToolsScreen(),
-                  ChatScreen(roomData: snapData, newMessage: newChatMessage),
+                  ChatScreen(
+                    roomData: snapData,
+                    //newMessage: newChatMessage,
+                  ),
                 ],
               ),
               bottomNavigationBar: BottomTabBar(
                 tabController: _tabController,
-                newBriefingData: newBriefingData,
-                newMissionData: newMissionData,
-                newData: newData.anyNewData(),
-                newChatData: newChatMessage,
+                //newBriefingData: newBriefingData,
+                //newMissionData: newMissionData,
+                //newData: newData.anyNewData(),
+                //newChatData: newChatMessage,
               ),
               extendBody: true,
-              //backgroundColor: kBackgroundColorLight,
             ),
           );
         }

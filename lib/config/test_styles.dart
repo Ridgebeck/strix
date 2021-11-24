@@ -20,7 +20,7 @@ class TextStyles {
             ? PhoneSize.medium
             : PhoneSize.small;
 
-    this.headerTextStyle = TextStyle(
+    headerTextStyle = TextStyle(
       color: Colors.greenAccent,
       fontFamily: 'Raleway',
       fontWeight: FontWeight.w700,
@@ -32,7 +32,7 @@ class TextStyles {
               : 19.0,
     );
 
-    this.stdTextStyle = TextStyle(
+    stdTextStyle = TextStyle(
       color: Colors.black,
       fontWeight: FontWeight.w400,
       fontSize: phoneSize == PhoneSize.large
@@ -42,7 +42,7 @@ class TextStyles {
               : 17.0,
     );
 
-    this.boldTextStyle = TextStyle(
+    boldTextStyle = TextStyle(
       color: Colors.black,
       fontWeight: FontWeight.w700,
       fontSize: phoneSize == PhoneSize.large

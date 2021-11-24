@@ -21,8 +21,7 @@ class WaitingRoomScreen extends StatefulWidget {
   _WaitingRoomScreenState createState() => _WaitingRoomScreenState();
 }
 
-class _WaitingRoomScreenState extends State<WaitingRoomScreen>
-    with SingleTickerProviderStateMixin {
+class _WaitingRoomScreenState extends State<WaitingRoomScreen> with SingleTickerProviderStateMixin {
   final Authorization _authorization = serviceLocator<Authorization>();
   late Animation _animation;
   late AnimationController _animationController;
@@ -48,8 +47,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen>
 
   @override
   Widget build(BuildContext context) {
-    final Stream<Room?> roomStream =
-        WaitingRoomLogic().roomDocStream(widget.roomID);
+    final Stream<Room?> roomStream = WaitingRoomLogic().roomDocStream(widget.roomID);
     int numberPlayers = 0;
     int minimumPlayers = 0;
 
@@ -78,30 +76,18 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen>
                   Expanded(
                     flex: 20,
                     child: StreamBuilder(
-                        // initialData: Room(
-                        //   gameTitle: 'test',
-                        //   roomID: '123456',
-                        //   gameProgress: 'waiting',
-                        //   players: [],
-                        //   minimumPlayers: 1,
-                        //   maximumPlayers: 10,
-                        //   opened: DateTime.now(),
-                        //   chat: Chat(messages: []),
-                        // ),
                         stream: roomStream, // room snapshot or null on error
-                        builder: (BuildContext context,
-                            AsyncSnapshot<Room?> snapshot) {
+                        builder: (BuildContext context, AsyncSnapshot<Room?> snapshot) {
                           Room? snapData = snapshot.data;
                           // check if stream is waiting for connection
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
                             // TODO: IMPLEMENT LOADING SCREEN
                             return const Center(child: Text('LOADING!'));
                           }
                           // check if snapshot has room data
                           // todo: change after doc delete after left is implemented
                           else if (snapData == null) {
-                            print('NO DATA COULD BE FETCHED!');
+                            debugPrint('NO DATA COULD BE FETCHED!');
                             return Container(
                                 //color: Colors.red,
                                 );
@@ -135,12 +121,10 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen>
                             try {
                               thisPlayer = snapData.players
                                   .where((Player player) =>
-                                      player.uid ==
-                                      _authorization.getCurrentUserID())
+                                      player.uid == _authorization.getCurrentUserID())
                                   .single;
                             } catch (e) {
-                              print(
-                                  'Error while fetching player data. Error: $e');
+                              debugPrint('Error while fetching player data. Error: $e');
                               // todo : error handling when no player found?
                               // happens when player leaves and stream is still open
                             }
@@ -150,20 +134,15 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen>
                                 animation: _animation,
                                 builder: (context, child) {
                                   return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
                                       //TopIcon(),
                                       Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Transform(
-                                            transform:
-                                                Matrix4.translationValues(
-                                                    _animation.value * 750,
-                                                    0.0,
-                                                    0.0),
+                                            transform: Matrix4.translationValues(
+                                                _animation.value * 750, 0.0, 0.0),
                                             child: const FractionallySizedBox(
                                               widthFactor: 0.375,
                                               child: FittedBox(
@@ -181,17 +160,13 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen>
                                             ),
                                           ),
                                           Transform(
-                                            transform:
-                                                Matrix4.translationValues(
-                                                    _animation.value * -800,
-                                                    0.0,
-                                                    0.0),
+                                            transform: Matrix4.translationValues(
+                                                _animation.value * -800, 0.0, 0.0),
                                             child: FractionallySizedBox(
                                               widthFactor: 0.75,
                                               child: FittedBox(
                                                 child: Text(
-                                                  snapData.gameTitle
-                                                      .toUpperCase(),
+                                                  snapData.gameTitle.toUpperCase(),
                                                   style: const TextStyle(
                                                     fontSize: 70.0,
                                                     fontFamily: 'Raleway',
@@ -209,11 +184,8 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen>
                                       Column(
                                         children: [
                                           Transform(
-                                            transform:
-                                                Matrix4.translationValues(
-                                                    _animation.value * -950,
-                                                    0.0,
-                                                    0.0),
+                                            transform: Matrix4.translationValues(
+                                                _animation.value * -950, 0.0, 0.0),
                                             child: FractionallySizedBox(
                                               widthFactor: 0.75,
                                               child: FittedBox(
@@ -231,11 +203,8 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen>
                                             ),
                                           ),
                                           Transform(
-                                            transform:
-                                                Matrix4.translationValues(
-                                                    _animation.value * -1250,
-                                                    0.0,
-                                                    0.0),
+                                            transform: Matrix4.translationValues(
+                                                _animation.value * -1250, 0.0, 0.0),
                                             child: const FractionallySizedBox(
                                               widthFactor: 0.3,
                                               child: FittedBox(
@@ -254,23 +223,17 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen>
                                       ),
                                       Expanded(flex: 10, child: Container()),
                                       Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                        mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           FractionallySizedBox(
                                             widthFactor: 0.75,
                                             child: Column(
                                               children: [
                                                 Align(
-                                                  alignment:
-                                                      Alignment.centerRight,
+                                                  alignment: Alignment.centerRight,
                                                   child: Transform(
-                                                    transform: Matrix4
-                                                        .translationValues(
-                                                            _animation.value *
-                                                                -1200,
-                                                            0.0,
-                                                            0.0),
+                                                    transform: Matrix4.translationValues(
+                                                        _animation.value * -1200, 0.0, 0.0),
                                                     child: Text(
                                                       '${snapData.minimumPlayers} to ${snapData.maximumPlayers} agents needed',
                                                       style: const TextStyle(
@@ -282,37 +245,24 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen>
                                                   ),
                                                 ),
                                                 Padding(
-                                                  padding: const EdgeInsets
-                                                          .symmetric(
-                                                      vertical: 10.0),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(vertical: 10.0),
                                                   child: Row(
                                                     children: [
                                                       Expanded(
                                                         child: Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .symmetric(
+                                                          padding: const EdgeInsets.symmetric(
                                                             horizontal: 10.0,
                                                           ),
                                                           child: Transform(
-                                                            transform: Matrix4
-                                                                .translationValues(
-                                                                    _animation
-                                                                            .value *
-                                                                        -2000,
-                                                                    0.0,
-                                                                    0.0),
+                                                            transform: Matrix4.translationValues(
+                                                                _animation.value * -2000, 0.0, 0.0),
                                                             child: FittedBox(
                                                               child: Icon(
-                                                                snapData.players
-                                                                            .length >
-                                                                        0
-                                                                    ? Icons
-                                                                        .person
-                                                                    : Icons
-                                                                        .person_outline,
-                                                                color: Colors
-                                                                    .white,
+                                                                snapData.players.isNotEmpty
+                                                                    ? Icons.person
+                                                                    : Icons.person_outline,
+                                                                color: Colors.white,
                                                                 size: 90.0,
                                                               ),
                                                             ),
@@ -321,33 +271,18 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen>
                                                       ),
                                                       Expanded(
                                                         child: Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                      .symmetric(
-                                                                  horizontal:
-                                                                      10.0),
+                                                          padding: const EdgeInsets.symmetric(
+                                                              horizontal: 10.0),
                                                           child: Transform(
-                                                            transform: Matrix4
-                                                                .translationValues(
-                                                                    _animation
-                                                                            .value *
-                                                                        -1600,
-                                                                    0.0,
-                                                                    0.0),
+                                                            transform: Matrix4.translationValues(
+                                                                _animation.value * -1600, 0.0, 0.0),
                                                             child: FittedBox(
-                                                              child: Container(
-                                                                child: Icon(
-                                                                  snapData.players
-                                                                              .length >
-                                                                          1
-                                                                      ? Icons
-                                                                          .person
-                                                                      : Icons
-                                                                          .person_outline,
-                                                                  color: Colors
-                                                                      .white,
-                                                                  size: 90.0,
-                                                                ),
+                                                              child: Icon(
+                                                                snapData.players.length > 1
+                                                                    ? Icons.person
+                                                                    : Icons.person_outline,
+                                                                color: Colors.white,
+                                                                size: 90.0,
                                                               ),
                                                             ),
                                                           ),
@@ -355,33 +290,18 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen>
                                                       ),
                                                       Expanded(
                                                         child: Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                      .symmetric(
-                                                                  horizontal:
-                                                                      10.0),
+                                                          padding: const EdgeInsets.symmetric(
+                                                              horizontal: 10.0),
                                                           child: Transform(
-                                                            transform: Matrix4
-                                                                .translationValues(
-                                                                    _animation
-                                                                            .value *
-                                                                        -1200,
-                                                                    0.0,
-                                                                    0.0),
+                                                            transform: Matrix4.translationValues(
+                                                                _animation.value * -1200, 0.0, 0.0),
                                                             child: FittedBox(
-                                                              child: Container(
-                                                                child: Icon(
-                                                                  snapData.players
-                                                                              .length >
-                                                                          2
-                                                                      ? Icons
-                                                                          .person
-                                                                      : Icons
-                                                                          .person_outline,
-                                                                  color: Colors
-                                                                      .white,
-                                                                  size: 90.0,
-                                                                ),
+                                                              child: Icon(
+                                                                snapData.players.length > 2
+                                                                    ? Icons.person
+                                                                    : Icons.person_outline,
+                                                                color: Colors.white,
+                                                                size: 90.0,
                                                               ),
                                                             ),
                                                           ),
@@ -389,33 +309,18 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen>
                                                       ),
                                                       Expanded(
                                                         child: Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                      .symmetric(
-                                                                  horizontal:
-                                                                      10.0),
+                                                          padding: const EdgeInsets.symmetric(
+                                                              horizontal: 10.0),
                                                           child: Transform(
-                                                            transform: Matrix4
-                                                                .translationValues(
-                                                                    _animation
-                                                                            .value *
-                                                                        -800,
-                                                                    0.0,
-                                                                    0.0),
+                                                            transform: Matrix4.translationValues(
+                                                                _animation.value * -800, 0.0, 0.0),
                                                             child: FittedBox(
-                                                              child: Container(
-                                                                child: Icon(
-                                                                  snapData.players
-                                                                              .length >
-                                                                          3
-                                                                      ? Icons
-                                                                          .person
-                                                                      : Icons
-                                                                          .person_outline,
-                                                                  color: Colors
-                                                                      .white,
-                                                                  size: 90.0,
-                                                                ),
+                                                              child: Icon(
+                                                                snapData.players.length > 3
+                                                                    ? Icons.person
+                                                                    : Icons.person_outline,
+                                                                color: Colors.white,
+                                                                size: 90.0,
                                                               ),
                                                             ),
                                                           ),
@@ -425,18 +330,12 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen>
                                                   ),
                                                 ),
                                                 Align(
-                                                  alignment:
-                                                      Alignment.centerLeft,
+                                                  alignment: Alignment.centerLeft,
                                                   child: Transform(
-                                                    transform: Matrix4
-                                                        .translationValues(
-                                                            _animation.value *
-                                                                850,
-                                                            0.0,
-                                                            0.0),
+                                                    transform: Matrix4.translationValues(
+                                                        _animation.value * 850, 0.0, 0.0),
                                                     child: Text(
-                                                      snapData.players.length >
-                                                              1
+                                                      snapData.players.length > 1
                                                           ? '${snapData.players.length} agents online'
                                                           : '${snapData.players.length} agent online',
                                                       style: const TextStyle(

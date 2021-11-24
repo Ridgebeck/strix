@@ -12,32 +12,30 @@ class PictureScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      //backgroundColor: Colors.black,
-      body: Stack(children: [
-        PhotoView(
-          minScale: PhotoViewComputedScale.contained * 1.0,
-          maxScale: PhotoViewComputedScale.covered * 2.5,
-          initialScale: PhotoViewComputedScale.covered * 1.0,
-          imageProvider: AssetImage('assets/data/' + pictureString),
-        ),
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 10.0,
-          left: MediaQuery.of(context).padding.left + 10.0,
-          child: FloatingActionButton(
-            mini: true,
-            //backgroundColor: kAccentColor,
-            //splashColor: kBackgroundColorLight,
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(
-              Icons.navigate_before_sharp,
-              color: Colors.black,
-            ),
+    return Stack(children: [
+      PhotoView(
+        heroAttributes: PhotoViewHeroAttributes(tag: pictureString),
+        minScale: PhotoViewComputedScale.contained * 1.0,
+        maxScale: PhotoViewComputedScale.covered * 4.0,
+        initialScale: PhotoViewComputedScale.covered * 1.1,
+        imageProvider: AssetImage(pictureString),
+      ),
+      Positioned(
+        top: MediaQuery.of(context).padding.top + 10.0,
+        left: MediaQuery.of(context).padding.left + 10.0,
+        child: FloatingActionButton(
+          mini: true,
+          //backgroundColor: kAccentColor,
+          //splashColor: kBackgroundColorLight,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Icon(
+            Icons.navigate_before_sharp,
+            color: Colors.black,
           ),
         ),
-      ]),
-    );
+      ),
+    ]);
   }
 }

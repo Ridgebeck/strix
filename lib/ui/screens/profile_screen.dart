@@ -26,8 +26,7 @@ class ProfileScreen extends StatelessWidget {
                 height: screenHeight / 2,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage(
-                        'assets/profile_pictures/' + person.profileImage),
+                    image: AssetImage('assets/profile_pictures/' + person.profileImage),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -112,23 +111,20 @@ class ProfileScreen extends StatelessWidget {
                                         TextButton(
                                           style: TextButton.styleFrom(
                                             padding: const EdgeInsets.all(0),
-                                            tapTargetSize: MaterialTapTargetSize
-                                                .shrinkWrap,
+                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                             minimumSize: const Size(0, 0),
                                           ),
                                           onPressed: () {
-                                            print('launch?');
+                                            debugPrint('launch?');
                                             launch(
-                                                'https://www.instagram.com/' +
-                                                    person.instagram!);
+                                                'https://www.instagram.com/' + person.instagram!);
                                           },
                                           child: Text(
                                             '@' + person.instagram!,
                                             style: TextStyle(
                                               color: Colors.blueGrey[100],
                                               fontSize: 16.0,
-                                              decoration:
-                                                  TextDecoration.underline,
+                                              decoration: TextDecoration.underline,
                                             ),
                                           ),
                                         ),

@@ -107,8 +107,7 @@ class _StartJoinScreenState extends State<StartJoinScreen> {
                 Center(
                   child: GestureDetector(
                     onTap: () {},
-                    child: const BorderedButton(
-                        buttonText: 'How this works', fontSize: 20.0),
+                    child: const BorderedButton(buttonText: 'How this works', fontSize: 20.0),
                   ),
                 ),
                 Expanded(child: Container()),
@@ -117,7 +116,7 @@ class _StartJoinScreenState extends State<StartJoinScreen> {
                     onTap: () async {
                       String? roomID = await StartRoomLogic().addRoom();
                       if (roomID == null) {
-                        print('ERROR: could not add new game');
+                        debugPrint('ERROR: could not add new game');
                         // TODO: show error pop up when game cannot be created
                       } else {
                         Navigator.of(context).pushReplacementNamed(
@@ -126,19 +125,16 @@ class _StartJoinScreenState extends State<StartJoinScreen> {
                         );
                       }
                     },
-                    child: const BorderedButton(
-                        buttonText: 'Start a Mission', fontSize: 20.0),
+                    child: const BorderedButton(buttonText: 'Start a Mission', fontSize: 20.0),
                   ),
                 ),
                 Expanded(child: Container()),
                 Center(
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.of(context)
-                          .pushReplacementNamed(JoinRoomScreen.routeId);
+                      Navigator.of(context).pushReplacementNamed(JoinRoomScreen.routeId);
                     },
-                    child: const BorderedButton(
-                        buttonText: 'Join a Mission', fontSize: 20.0),
+                    child: const BorderedButton(buttonText: 'Join a Mission', fontSize: 20.0),
                   ),
                 ),
                 Expanded(flex: 2, child: Container()),

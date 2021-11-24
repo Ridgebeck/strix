@@ -21,8 +21,7 @@ class BriefingScreen extends StatefulWidget {
   _BriefingScreenState createState() => _BriefingScreenState();
 }
 
-class _BriefingScreenState extends State<BriefingScreen>
-    with SingleTickerProviderStateMixin {
+class _BriefingScreenState extends State<BriefingScreen> with SingleTickerProviderStateMixin {
   int _index = 0;
   late Animation _animation;
   late AnimationController _animationController;
@@ -63,9 +62,7 @@ class _BriefingScreenState extends State<BriefingScreen>
                 text: 'fight digital crime',
                 style: textStyles.boldTextStyle,
               ),
-              const TextSpan(
-                  text:
-                      ', has recruited you as an ISA - Intelligence Support Agent.'),
+              const TextSpan(text: ', has recruited you as an ISA - Intelligence Support Agent.'),
             ],
           ),
         ),
@@ -81,8 +78,7 @@ class _BriefingScreenState extends State<BriefingScreen>
                 text: '2-4 ISAs',
                 style: textStyles.boldTextStyle,
               ),
-              const TextSpan(
-                  text: '. Your team will remotely support our field agent.'),
+              const TextSpan(text: '. Your team will remotely support our field agent.'),
             ],
           ),
         ),
@@ -112,14 +108,12 @@ class _BriefingScreenState extends State<BriefingScreen>
             style: textStyles.stdTextStyle,
             children: [
               const TextSpan(
-                  text:
-                      'We heard good things about you. This mission should take about '),
+                  text: 'We heard good things about you. This mission should take about '),
               TextSpan(
                 text: '60-90 minutes',
                 style: textStyles.boldTextStyle,
               ),
-              const TextSpan(
-                  text: ', but we believe you can be quicker than that.'),
+              const TextSpan(text: ', but we believe you can be quicker than that.'),
             ],
           ),
         ),
@@ -130,15 +124,13 @@ class _BriefingScreenState extends State<BriefingScreen>
           text: TextSpan(
             style: textStyles.stdTextStyle,
             children: [
-              const TextSpan(
-                  text: 'One of you needs to start a session to create a '),
+              const TextSpan(text: 'One of you needs to start a session to create a '),
               TextSpan(
                 text: 'session ID',
                 style: textStyles.boldTextStyle,
               ),
               const TextSpan(
-                  text:
-                      '. The other agents can then join the session to synchronize your data.'),
+                  text: '. The other agents can then join the session to synchronize your data.'),
             ],
           ),
         ),
@@ -154,8 +146,7 @@ class _BriefingScreenState extends State<BriefingScreen>
                       'Once everybody is in and your apps are synchronized, you will receive further '
                       'instructions through the '),
               TextSpan(
-                text:
-                    'STRIX mission control app.', // todo: change to actual app name
+                text: 'STRIX mission control app.', // todo: change to actual app name
                 style: textStyles.boldTextStyle,
               ),
             ],
@@ -193,8 +184,7 @@ class _BriefingScreenState extends State<BriefingScreen>
                       animation: _animation,
                       builder: (context, child) {
                         return Transform(
-                          transform: Matrix4.translationValues(
-                              _animation.value * 500, 0.0, 0.0),
+                          transform: Matrix4.translationValues(_animation.value * 500, 0.0, 0.0),
                           child: PageView.builder(
                             itemCount: stringList.length,
                             controller: PageController(viewportFraction: 0.8),
@@ -216,15 +206,14 @@ class _BriefingScreenState extends State<BriefingScreen>
                                 decoration: BoxDecoration(
                                   color: i == _index
                                       ? Colors.grey.shade200.withOpacity(0.3)
-                                      : Colors.greenAccent.withOpacity(max(0.0,
-                                          0.5 * (1 - _animation.value * 5))),
+                                      : Colors.greenAccent
+                                          .withOpacity(max(0.0, 0.5 * (1 - _animation.value * 5))),
                                   borderRadius: BorderRadius.circular(20.0),
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(20.0),
                                   child: BackdropFilter(
-                                    filter:
-                                        ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+                                    filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
                                     child: Row(
                                       children: [
                                         Expanded(child: Container()),
@@ -232,26 +221,19 @@ class _BriefingScreenState extends State<BriefingScreen>
                                           flex: 8,
                                           child: Column(
                                             children: [
-                                              Expanded(
-                                                  flex: 2, child: Container()),
+                                              Expanded(flex: 2, child: Container()),
                                               Expanded(
                                                 flex: 3,
                                                 child: FittedBox(
                                                   child: Text(
-                                                    stringList[i]['title'] ??
-                                                        'title',
-                                                    style: textStyles
-                                                        .headerTextStyle,
+                                                    stringList[i]['title'] ?? 'title',
+                                                    style: textStyles.headerTextStyle,
                                                   ),
                                                 ),
                                               ),
-                                              Expanded(
-                                                  flex: 1, child: Container()),
-                                              Expanded(
-                                                  flex: 16,
-                                                  child: stringList[i]['text']),
-                                              Expanded(
-                                                  flex: 2, child: Container()),
+                                              Expanded(flex: 1, child: Container()),
+                                              Expanded(flex: 16, child: stringList[i]['text']),
+                                              Expanded(flex: 2, child: Container()),
                                             ],
                                           ),
                                         ),
@@ -273,7 +255,7 @@ class _BriefingScreenState extends State<BriefingScreen>
                       onTap: () async {
                         String? roomID = await StartRoomLogic().addRoom();
                         if (roomID == null) {
-                          print('ERROR: could not add new game');
+                          debugPrint('ERROR: could not add new game');
                           // TODO: show error pop up when game cannot be created
                         } else {
                           _animationController.animateTo(0.0);
@@ -300,8 +282,7 @@ class _BriefingScreenState extends State<BriefingScreen>
                     child: GestureDetector(
                       onTap: () {
                         _animationController.animateTo(0.0);
-                        Navigator.of(context)
-                            .pushReplacementNamed(JoinRoomScreen.routeId);
+                        Navigator.of(context).pushReplacementNamed(JoinRoomScreen.routeId);
                       },
                       child: const Hero(
                         tag: 'button2',

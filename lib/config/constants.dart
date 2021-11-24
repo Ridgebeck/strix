@@ -4,8 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 const String kRoomsCollection = 'activeRooms';
-const String kSettingsReference =
-    'settings'; // used for collection name and field name
+const String kSettingsReference = 'settings'; // used for collection name and field name
 const String kBriefingReference = 'briefing';
 const String kGoalsReference = 'goals';
 const String kHintsReference = 'hints';
@@ -18,6 +17,9 @@ const String kSettingsStatusField = 'availableAssets'; // change to gameProgress
 const String kOpenedField = 'opened';
 const String kChatField = 'chat';
 const String kChatMessagesField = 'messages';
+
+const double smallMargin = 0.02;
+const double largeMargin = 0.05;
 
 // TODO: replace with enum?
 const String kWaitingStatus = 'waiting';
@@ -56,20 +58,47 @@ enum canLeave {
   error,
 }
 
-class DataSelection {
-  static const String menu = "Menu";
-  static const String social = "Social Media";
-  static const String messages = "Messages";
-  static const String images = "Images";
-  static const String audio = "Audio";
-  static const String videos = "Videos";
-  static const String maps = "Maps";
-  static const String reports = "Reports";
-  static const String socialFolder = "social";
-  static const String messagesFolder = "messages";
-  static const String imagesFolder = "images";
-  static const String audioFolder = "audio";
-  static const String videosFolder = "videos";
-  static const String mapsFolder = "maps";
-  static const String reportsFolder = "reports";
+enum dataType {
+  images,
+  social,
+  messages,
+  videos,
+  audioFiles,
+  reports,
+}
+
+class DataCategory {
+  // TODO: static or static const?
+  static DataDetails images = DataDetails(
+    type: dataType.images,
+    title: "Images",
+    folderPath: "assets/data/images/",
+  );
+  static DataDetails social = DataDetails(
+    type: dataType.social,
+    title: "Social Media",
+    folderPath: "assets/data/social/",
+  );
+  static DataDetails messages = DataDetails(
+    type: dataType.messages,
+    title: "Messages",
+    folderPath: "assets/data/messages/",
+  );
+  static DataDetails videos = DataDetails(
+    type: dataType.videos,
+    title: "Videos",
+    folderPath: "assets/data/videos/",
+  );
+}
+
+class DataDetails {
+  dataType type;
+  String title;
+  String folderPath;
+
+  DataDetails({
+    required this.type,
+    required this.title,
+    required this.folderPath,
+  });
 }

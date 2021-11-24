@@ -54,20 +54,38 @@ class MarkerData {
   String name;
   LatLng position;
   MarkerTypeData type;
-  String infoText;
+  String? infoText;
   bool selected;
-  bool agentIsHere;
   bool active;
-  Person? person;
+  List<Person> personsHere;
 
   MarkerData({
     required this.name,
     required this.position,
     required this.type,
-    this.infoText = "",
+    this.infoText,
     this.selected = false,
-    this.agentIsHere = false,
     this.active = true,
-    this.person,
+    this.personsHere = const [],
+  });
+}
+
+class PersonMarkerData {
+  Person person;
+  List<LatLng> positionPath;
+  LatLng currentPosition;
+  List<LatLng>? polyPositions;
+  bool atLocation;
+  bool onFoot;
+  String? infoText;
+
+  PersonMarkerData({
+    required this.person,
+    required this.positionPath,
+    required this.currentPosition,
+    this.polyPositions,
+    this.atLocation = false,
+    this.onFoot = true,
+    this.infoText,
   });
 }

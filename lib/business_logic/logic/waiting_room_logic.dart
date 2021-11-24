@@ -12,7 +12,7 @@ class WaitingRoomLogic {
   // provide stream of game room to UI
   Stream<Room?> roomDocStream(String roomID) {
     // check if returned data from stream makes sense
-    print('ROOM DOC STREAM CALLED');
+    debugPrint('ROOM DOC STREAM CALLED');
     return _gameDoc.getDocStream(roomID: roomID);
   }
 
@@ -29,8 +29,7 @@ class WaitingRoomLogic {
         context: context,
         builder: (_) => AlertDialog(
           title: const Text('Warning'),
-          content: Text(
-              'You need at least $minimumPlayers players to start the game.'),
+          content: Text('You need at least $minimumPlayers players to start the game.'),
           actions: [
             TextButton(
               child: const Text('OK'),
@@ -48,8 +47,7 @@ class WaitingRoomLogic {
         context: context,
         builder: (_) => AlertDialog(
           title: const Text('Warning'),
-          content:
-              const Text('You become the host if you start the game. Proceed?'),
+          content: const Text('You become the host if you start the game. Proceed?'),
           actions: [
             TextButton(
               child: const Text('BACK'),
@@ -75,11 +73,11 @@ class WaitingRoomLogic {
 
     // only start game if user clicked START
     if (start == true) {
-      print('starting game...');
+      debugPrint('starting game...');
       bool started = await _gameDoc.startGame(roomID: roomID);
       if (started == false) {
         // todo: error handling
-        print('Game could not be started');
+        debugPrint('Game could not be started');
       }
       // save player as host if start is successful (local and online?)
       // TODO: Save player as host locally?

@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+
 import 'authorization_abstract.dart';
 import 'package:strix/services/service_locator.dart';
 import 'package:strix/services/database/user_doc_abstract.dart';
@@ -16,8 +18,8 @@ class AuthorizationFirebase implements Authorization {
       // create or update user document
       _userDoc.updateUserSignIn(uid: userCredential.user!.uid);
     } catch (e) {
-      print('Sign in anonymously failed. Error code: $e');
-      // todo: inform user about not being able to sign in
+      debugPrint('Sign in anonymously failed. Error code: $e');
+      // TODO: inform user about not being able to sign in
     }
   }
 

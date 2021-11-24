@@ -6,6 +6,8 @@ import 'database/user_doc_abstract.dart';
 import 'database/user_doc_firestore.dart';
 import 'authorization/authorization_abstract.dart';
 import 'authorization/authorization_firebase.dart';
+import 'game_state/game_state_abstract.dart';
+import 'game_state/game_state_interactions.dart';
 
 // allow global access to instance via get it
 GetIt serviceLocator = GetIt.instance;
@@ -21,6 +23,7 @@ Future<void> setupServices() async {
   // interact with user doc via firestore
   serviceLocator.registerLazySingleton<UserDoc>(() => UserDocFirestore());
   // handle authorization via firebase auth
-  serviceLocator
-      .registerLazySingleton<Authorization>(() => AuthorizationFirebase());
+  serviceLocator.registerLazySingleton<Authorization>(() => AuthorizationFirebase());
+  // interact with screen independent variables
+  serviceLocator.registerLazySingleton<GameState>(() => GameStateInteractions());
 }

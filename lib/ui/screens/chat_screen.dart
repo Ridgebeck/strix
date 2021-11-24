@@ -10,8 +10,12 @@ import 'package:strix/ui/widgets/chat_message.dart';
 
 class ChatScreen extends StatelessWidget {
   final Room roomData;
-  final bool newMessage;
-  ChatScreen({Key? key, required this.roomData, required this.newMessage}) : super(key: key);
+  //final bool newMessage;
+  ChatScreen({
+    Key? key,
+    required this.roomData,
+    //required this.newMessage,
+  }) : super(key: key);
 
   final _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -126,12 +130,12 @@ class ChatScreen extends StatelessWidget {
                             bool fromMe = fromTeam
                                 ? _authorization.getCurrentUserID() == message.author.uid
                                 : false;
-                            bool delay = (index == 0 &&
-                                    fromTeam == false &&
-                                    reversedList.length > 1 &&
-                                    newMessage)
-                                ? true
-                                : false;
+                            bool delay =
+                                (index == 0 && fromTeam == false && reversedList.length > 1 // &&
+                                    //newMessage,
+                                    )
+                                    ? true
+                                    : false;
 
                             return ChatMessage(
                               fromTeam: fromTeam,

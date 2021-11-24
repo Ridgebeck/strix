@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:strix/business_logic/classes/call.dart';
 import 'package:strix/business_logic/classes/chat.dart';
 import 'package:strix/business_logic/classes/hex_color.dart';
+import 'package:strix/business_logic/classes/marker.dart';
 import 'package:strix/business_logic/classes/room.dart';
 import 'package:strix/business_logic/classes/player.dart';
 import 'package:strix/business_logic/classes/person.dart';
@@ -14,6 +15,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:strix/services/service_locator.dart';
 import 'package:strix/services/authorization/authorization_abstract.dart';
 import 'package:strix/config/constants.dart';
+import 'package:latlong2/latlong.dart';
 
 // interaction with room document on Firestore
 class GameDocFirestore implements GameDoc {
@@ -30,7 +32,7 @@ class GameDocFirestore implements GameDoc {
     return await rooms.doc(roomID).get().then((docSnapshot) async {
       // check if document with roomID already exists
       if (docSnapshot.exists) {
-        print('Document already exists!');
+        debugPrint('Document already exists!');
         return null;
       }
       // document does not exist yet, proceed
@@ -62,14 +64,14 @@ class GameDocFirestore implements GameDoc {
         return roomID;
       }
     }).catchError((e) {
-      print('Error while trying to create new room: $e');
+      debugPrint('Error while trying to create new room: $e');
       return null;
     });
   }
 
   @override
   Stream<Room?> getDocStream({required String roomID}) {
-    print('trying to start stream!');
+    debugPrint('trying to start stream!');
     // Stream of Document Snapshots from database
     Stream<DocumentSnapshot<Map<String, dynamic>>> docRefStream =
         FirebaseFirestore.instance.collection(kRoomsCollection).doc(roomID).snapshots();
@@ -86,7 +88,7 @@ class GameDocFirestore implements GameDoc {
       if (!docSnap.exists || snapData == null) {
         return null;
       } else {
-        print('CONVERTING STREAM DATA! ${snapData['gameID']}');
+        debugPrint('CONVERTING STREAM DATA! ${snapData['gameID']}');
 
         // convert player list into standardized format
         List<Player> playerList = [];
@@ -110,10 +112,10 @@ class GameDocFirestore implements GameDoc {
             protagonists: snapData[kSettingsReference]['protagonists']);
 
         // convert available assets into standardized format
-        print('convert assets');
+        debugPrint('convert assets');
         List<AvailableAssetEntry> availableAssets = _convertAvailableAssets(snapData);
 
-        print('create room from stream');
+        debugPrint('create room from stream');
         // convert all values into room class
         Room currentRoomData = Room(
           gameTitle: snapData[kSettingsReference]['gameTitle'],
@@ -132,8 +134,8 @@ class GameDocFirestore implements GameDoc {
         return currentRoomData;
       }
     } catch (e) {
-      print('Error while trying to create room data from stream.');
-      print('Error: $e');
+      debugPrint('Error while trying to create room data from stream.');
+      debugPrint('Error: $e');
       return null;
     }
   }
@@ -143,7 +145,7 @@ class GameDocFirestore implements GameDoc {
     List<dynamic> availableAssetsRaw = snapData[kSettingsReference][kSettingsStatusField];
     late AvailableAssetEntry assetEntry;
 
-    print('CONVERTING ASSETS');
+    debugPrint('CONVERTING ASSETS');
 
     // go through all entries in list
     for (Map<String, dynamic> milestone in availableAssetsRaw) {
@@ -155,163 +157,184 @@ class GameDocFirestore implements GameDoc {
         value.forEach((assetEntryField, fieldData) {
           // convert call if there is one
           if (assetEntryField == 'call') {
-            Map<String, dynamic> callMap = snapData[kSettingsReference]['calls'][value['call']];
-            Map<String, dynamic> callerMap =
-                snapData[kSettingsReference]['protagonists'][callMap['person']];
-            Person caller = Person(
-              firstName: callerMap['firstName'],
-              lastName: callerMap['lastName'],
-              profileImage: callerMap['profileImage'],
-              title: callerMap['title'],
-              age: callerMap['age'],
-              profession: callerMap['profession'],
-              instagram: callerMap['instagram'],
+            assetEntry.call = Call(
+              callFile: fieldData['callFile'],
+              person: Person(
+                firstName: fieldData['person']['firstName'],
+                lastName: fieldData['person']['lastName'],
+                profileImage: fieldData['person']['profileImage'],
+                title: fieldData['person']['title'],
+                age: fieldData['person']['age'],
+                profession: fieldData['person']['profession'],
+                instagram: fieldData['person']['instagram'],
+              ),
             );
-            Call currentCall = Call(
-              callFile: callMap['callFile'],
-              person: caller,
-            );
-            assetEntry.call = currentCall;
-            print('CALL CONVERTED');
+
+            debugPrint('CALL CONVERTED');
           }
           // convert data entry
           else if (assetEntryField == 'data') {
-            print('Found data entry');
+            debugPrint('Found data entry');
             assetEntry.data = DataEntry();
             // go through data entry
             fieldData.forEach((dataField, dataFieldData) {
               if (dataField == 'social' && snapData[kSettingsReference]['hasInstagram'] == false) {
-                print('Found social entry and group does not have insta');
+                debugPrint('Found social entry and group does not have insta');
                 assetEntry.data!.social = List.from(dataFieldData);
               }
               if (dataField == 'messages') {
-                print('Found messages entry');
+                debugPrint('Found messages entry');
                 assetEntry.data!.messages = List.from(dataFieldData);
               }
               if (dataField == 'pictures') {
-                print('Found pictures entry');
+                debugPrint('Found pictures entry');
                 assetEntry.data!.images = List.from(dataFieldData);
               }
-              if (dataField == 'audioFiles') {
-                print('Found audioFiles entry');
-                assetEntry.data!.audioFiles = List.from(dataFieldData);
-              }
               if (dataField == 'videos') {
-                print('Found videos entry');
+                debugPrint('Found videos entry');
                 assetEntry.data!.videos = List.from(dataFieldData);
-              }
-              if (dataField == 'reports') {
-                print('Found reports entry');
-                assetEntry.data!.reports = List.from(dataFieldData);
               }
             });
           }
 
           // convert mission entry
           else if (assetEntryField == 'mission') {
-            print('Found mission entry');
+            debugPrint('Found mission entry');
             // create empty mission entry
             assetEntry.mission = MissionEntry();
 
-            int activeGoal = 0;
-            int? completedGoal;
-
             // find active goal and completed goal numbers
-            fieldData.forEach((missionField, missionFieldData) {
-              if (missionField == 'activeGoal') {
-                print('active goal found!');
-                activeGoal = missionFieldData;
-              }
-              if (missionField == 'completedGoal') {
-                print('completed goal found!');
-                completedGoal = missionFieldData;
-              }
-              // convert profiles
-              if (missionField == 'profiles') {
-                // define empty lists to add profile entries in correct format
-                List<Person> profileEntries = [];
+            fieldData.forEach(
+              (missionField, missionFieldData) {
+                // convert current goals
+                if (missionField == 'currentGoals') {
+                  // define empty list to add goal data in correct format
+                  List<GoalAndHints> goalAndHintList = [];
 
-                // go through profile list
-                missionFieldData.forEach((profile) {
-                  // convert all profile entries (maps/dicts) into person class
-                  profile.forEach((profileName, profileValues) {
-                    Person currentProfile = Person(
-                      firstName: profileValues['firstName'],
-                      lastName: profileValues['lastName'],
-                      title: profileValues['title'],
-                      profession: profileValues['profession'],
-                      age: profileValues['age'],
-                      profileImage: profileValues['profileImage'],
-                      instagram: profileValues['instagram'],
-                      hobbies: profileValues['hobbies'],
+                  // add each goal to list
+                  for (var goal in missionFieldData) {
+                    goalAndHintList.add(
+                      GoalAndHints(
+                        goal: goal['text'],
+                        hints: goal['hints'].cast<String>(),
+                      ),
                     );
-                    // add profile to list
-                    profileEntries.add(currentProfile);
-                  });
-                });
+                  }
+                  assetEntry.mission!.goalList = goalAndHintList;
+                }
 
-                // add converted lists to mission section of asset entry
-                assetEntry.mission!.profileEntries = profileEntries;
-                print('All profiles converted!');
+                // convert profiles
+                if (missionField == 'profiles') {
+                  // define empty lists to add profile entries in correct format
+                  List<Person> profileEntries = [];
+
+                  // go through profile list
+                  missionFieldData.forEach((profile) {
+                    // convert all profile entries (maps/dicts) into person class
+                    profile.forEach((profileName, profileValues) {
+                      Person currentProfile = Person(
+                        firstName: profileValues['firstName'],
+                        lastName: profileValues['lastName'],
+                        title: profileValues['title'],
+                        profession: profileValues['profession'],
+                        age: profileValues['age'],
+                        profileImage: profileValues['profileImage'],
+                        instagram: profileValues['instagram'],
+                        hobbies: profileValues['hobbies'],
+                      );
+                      // add profile to list
+                      profileEntries.add(currentProfile);
+                    });
+                  });
+
+                  // add converted lists to mission section of asset entry
+                  assetEntry.mission!.profileEntries = profileEntries;
+                  debugPrint('All profiles converted!');
+                }
+                // add briefing to mission data
+                if (missionField == 'briefing') {
+                  assetEntry.mission!.briefing = missionFieldData;
+                }
+              },
+            );
+          }
+
+          // convert map entry
+          else if (assetEntryField == 'map') {
+            debugPrint('Found map entry');
+            // create empty mission entry
+            assetEntry.map = MapEntry();
+            // create empty marker lists
+            List<MarkerData> markerList = [];
+            List<PersonMarkerData> personMarkerList = [];
+
+            // go through all map data
+            fieldData.forEach((mapField, mapFieldData) {
+              // find location data
+              if (mapField == 'locations') {
+                mapFieldData.forEach((location) {
+                  markerList.add(
+                    MarkerData(
+                      name: location['name'],
+                      type: location['type'] == 'store'
+                          ? MarkerType.store
+                          : location['type'] == 'restaurant'
+                              ? MarkerType.restaurant
+                              : location['type'] == 'residential'
+                                  ? MarkerType.residential
+                                  : location['type'] == 'target'
+                                      ? MarkerType.target
+                                      : MarkerType.poi,
+                      position: LatLng(location['latitude'], location['longitude']),
+                      infoText: location['infoText'],
+                    ),
+                  );
+                });
               }
-              // add briefing to mission data
-              if (missionField == 'briefing') {
-                assetEntry.mission!.briefing = missionFieldData;
+
+              // find personLocation data
+              if (mapField == 'personLocations') {
+                debugPrint("person location data found!");
+                mapFieldData.forEach((location) {
+                  // convert path into LatLng format list
+                  List<LatLng> positionPath = [];
+                  location['latitudePath'].asMap().forEach((index, latitude) {
+                    positionPath.add(LatLng(latitude, location['longitudePath'][index]));
+                  });
+
+                  personMarkerList.add(PersonMarkerData(
+                    person: Person(
+                      firstName: location['person']['firstName'],
+                      lastName: location['person']['lastName'],
+                      title: location['person']['title'],
+                      profession: location['person']['profession'],
+                      age: location['person']['age'],
+                      profileImage: location['person']['profileImage'],
+                      hobbies: location['person']['hobbies'],
+                      instagram: location['person']['instagram'],
+                    ),
+                    positionPath: positionPath,
+                    currentPosition: positionPath[0],
+                    onFoot: location['onFoot'] ?? false,
+                    infoText: location['infoText'],
+                  ));
+                });
               }
             });
-
-            // define empty lists to add room data in correct format
-            List<GoalAndHints> goalAndHintList = [];
-            List<MapPosition> mapPositionList = [];
-
-            // convert array from Firestore to dynamic list
-            List<dynamic> firestoreGoalsList =
-                List.from(snapData[kSettingsReference][kGoalsReference]);
-
-            bool currentMapPoint = true;
-
-            // convert each list entry from Firestore into correct format
-            for (var i = activeGoal; i >= 0; i--) {
-              print('converting goal');
-              goalAndHintList.add(
-                GoalAndHints(
-                  goal: firestoreGoalsList[i]['text'],
-                  completed: completedGoal == null
-                      ? false
-                      : i <= completedGoal!
-                          ? true
-                          : false,
-                  hints: List.from(
-                    snapData[kSettingsReference][kHintsReference]['goal$i'] ?? [],
-                  ),
-                ),
-              );
-
-              if (firestoreGoalsList[i].containsKey('mapPoint')) {
-                mapPositionList.add(
-                  MapPosition(
-                    markerKey: GlobalKey(),
-                    markerText: firestoreGoalsList[i]['mapPoint']['name'],
-                    positionX: firestoreGoalsList[i]['mapPoint']['positionX'].toDouble(),
-                    positionY: firestoreGoalsList[i]['mapPoint']['positionY'].toDouble(),
-                    currentGoal: currentMapPoint,
-                  ),
-                );
-                currentMapPoint = false;
-              }
-            }
-
-            // add converted lists to mission section of asset entry
-            assetEntry.mission!.goalList = goalAndHintList;
-            assetEntry.mission!.mapPositions = mapPositionList;
+            // add converted locations to map section of asset entry
+            assetEntry.map!.markerList = markerList;
+            assetEntry.map!.personMarkerList = personMarkerList;
+            debugPrint('All locations converted!');
           }
+
           // convert all other entries
           else {
-            print("Room conversion warning - Unknown entry found!");
+            debugPrint("Room conversion warning - Unknown entry found!");
+            // TODO: Handle unknown entries
           }
         });
       });
-      print('adding assetEntry ${assetEntry.entryName}');
+      debugPrint('adding assetEntry ${assetEntry.entryName}');
       availableAssets.add(assetEntry);
     }
     return availableAssets;
@@ -319,12 +342,12 @@ class GameDocFirestore implements GameDoc {
 
   Chat _convertChatData({Map<String, dynamic>? chatData, Map<String, dynamic>? protagonists}) {
     List<Message> chatList = [];
-    print('CONVERTING CHAT');
+    debugPrint('CONVERTING CHAT');
 
     if (chatData == null) {
-      print('no chat data to convert');
+      debugPrint('no chat data to convert');
     } else {
-      print('messages: ${chatData[kChatMessagesField].length}');
+      debugPrint('messages: ${chatData[kChatMessagesField].length}');
 
       for (int i = 0; i < chatData[kChatMessagesField].length; i++) {
         try {
@@ -335,12 +358,12 @@ class GameDocFirestore implements GameDoc {
           Player? currentPlayer;
 
           if (currentAuthor.containsKey('uid')) {
-            print('Author has UID --> Human!');
+            debugPrint('Author has UID --> Human!');
           }
 
           // check if author is player or person
           if (currentAuthor.containsKey('uid')) {
-            print('Player Message');
+            debugPrint('Player Message');
             currentPlayer = Player(
               name: currentAuthor['name'],
               uid: currentAuthor['uid'],
@@ -348,31 +371,19 @@ class GameDocFirestore implements GameDoc {
               iconData: IconData(currentAuthor['iconNumber'], fontFamily: 'MaterialIcons'),
             );
           } else {
-            print('Person Message');
+            debugPrint('Bot Message');
 
-            String authorName = currentAuthor['botPersonality'];
-
-            if (protagonists == null) {
-              print('Error - Protagonist section not found!');
-            } else {
-              if (protagonists[authorName] == null) {
-                print('Error - Protagonist $authorName could not be found!');
-              } else {
-                Map<String, dynamic> authorEntry = protagonists[authorName];
-
-                currentPerson = Person(
-                  firstName: authorEntry['firstName'],
-                  lastName: authorEntry['lastName'],
-                  title: authorEntry['title'],
-                  profileImage: authorEntry['profileImage'],
-                  age: authorEntry['age'],
-                  profession: authorEntry['profession'],
-                  hobbies: authorEntry['hobbies'],
-                  instagram: authorEntry['instagram'],
-                  color: HexColor.fromHex(authorEntry['color']),
-                );
-              }
-            }
+            currentPerson = Person(
+              firstName: currentAuthor['firstName'],
+              lastName: currentAuthor['lastName'],
+              title: currentAuthor['title'],
+              profileImage: currentAuthor['profileImage'],
+              age: currentAuthor['age'],
+              profession: currentAuthor['profession'],
+              hobbies: currentAuthor['hobbies'],
+              instagram: currentAuthor['instagram'],
+              //color: HexColor.fromHex(currentAuthor['color']),
+            );
           }
 
           chatList.add(
@@ -385,7 +396,7 @@ class GameDocFirestore implements GameDoc {
             ),
           );
         } catch (e) {
-          print('Could not convert message. Error: $e');
+          debugPrint('Could not convert message. Error: $e');
         }
       }
     }
@@ -407,8 +418,8 @@ class GameDocFirestore implements GameDoc {
         // check if player count is below limit
         List<Map<String, dynamic>> playersList = List.from(snapData['players']);
 
-        print('PLAYER LIST: $playersList');
-        print('UID: ${_authorization.getCurrentUserID()}');
+        debugPrint('PLAYER LIST: $playersList');
+        debugPrint('UID: ${_authorization.getCurrentUserID()}');
 
         if (playersList.length >= snapData['settings']['maximumPlayers']) {
           // return error String
@@ -420,7 +431,7 @@ class GameDocFirestore implements GameDoc {
           // check if player (uid) is already in the room
           for (Map<String, dynamic> playerEntry in playersList) {
             if (playerEntry['uid'] == uid) {
-              print('Player already in room. Joining.');
+              debugPrint('Player already in room. Joining.');
               return roomID;
             }
           }
@@ -455,7 +466,7 @@ class GameDocFirestore implements GameDoc {
       return value;
       // otherwise return null
     }).catchError((e) {
-      print('Error while trying to join a room: $e');
+      debugPrint('Error while trying to join a room: $e');
       return null;
     });
   }
@@ -475,12 +486,12 @@ class GameDocFirestore implements GameDoc {
 
       // check if document exists
       if (!snapshot.exists || snapData == null) {
-        print("Error: game does not exist or has no data!");
+        debugPrint("Error: game does not exist or has no data!");
         // todo: error handling?
       }
       // check if game has already been started
       else if (snapData[kGameStatusField] != kWaitingStatus) {
-        print("Game has been started already!");
+        debugPrint("Game has been started already!");
       }
       // otherwise leave the room
       else {
@@ -491,7 +502,7 @@ class GameDocFirestore implements GameDoc {
 
         // check if last participant is leaving
         if (playersList.length == 1) {
-          print('last player leaving');
+          debugPrint('last player leaving');
           // leave page
           animationController.animateTo(0.0);
           Navigator.of(context).pushReplacementNamed(BriefingScreen.routeId);
@@ -501,7 +512,7 @@ class GameDocFirestore implements GameDoc {
           // todo: delete after leaving room
           transaction.delete(rooms.doc(roomID));
         } else {
-          print('participant leaving');
+          debugPrint('participant leaving');
           // remove player from list
           playersList.removeWhere((playerEntry) => playerEntry['uid'] == uid);
           // TODO: error handling if uid is not found?
@@ -544,7 +555,7 @@ class GameDocFirestore implements GameDoc {
 
       // check if document exists and data is not null
       if (!snapshot.exists || snapData == null) {
-        print("Error: game does not exist!");
+        debugPrint("Error: game does not exist!");
         return false;
       }
       // check if game has already been started
@@ -569,7 +580,7 @@ class GameDocFirestore implements GameDoc {
           }
           return true;
         } catch (e) {
-          print('No players found. Error: $e');
+          debugPrint('No players found. Error: $e');
           return false;
         }
       }
@@ -578,7 +589,7 @@ class GameDocFirestore implements GameDoc {
 
   @override
   Future<void> moveToNextMilestone({required String roomID}) async {
-    print("MOVING TO NEXT MILESTONE");
+    debugPrint("MOVING TO NEXT MILESTONE");
     await FirebaseFirestore.instance.runTransaction((transaction) async {
       // Get the document
       DocumentSnapshot<Map<String, dynamic>> docSnap =
@@ -586,22 +597,22 @@ class GameDocFirestore implements GameDoc {
       Map<String, dynamic>? snapData = docSnap.data();
       // check if document exists and data is not null
       if (!docSnap.exists || snapData == null) {
-        print("Error: game does not exist!");
+        debugPrint("Error: game does not exist!");
       } else {
         // convert snapshot to Room class
         Room? room = docSnapToRoom(docSnap: docSnap);
         // check if room data is not null
         if (room == null) {
-          print("Room data is null");
+          debugPrint("Room data is null");
         } else {
-          // find index of current milestone
           // find current progress entry
           AvailableAssetEntry currentEntry =
               room.availableAssets.singleWhere((element) => element.entryName == room.gameProgress);
-
+          // find index of current milestone
           int currentIndex = room.availableAssets.indexOf(currentEntry);
-          print('INDEX: $currentIndex');
 
+          // TODO: make sure that milestone is only changed by one player at a time
+          // don't allow changes to milestones in time window?
           // update room document
           transaction.update(rooms.doc(roomID), {
             // change status to next milestone
@@ -637,8 +648,8 @@ class GameDocFirestore implements GameDoc {
         .set({
           'chat': {'messages': FieldValue.arrayUnion(messageList)},
         }, SetOptions(merge: true))
-        .then((value) => print('Updated'))
-        .catchError((e) => print('Error while sending message: $e'));
+        .then((value) => debugPrint('Updated'))
+        .catchError((e) => debugPrint('Error while sending message: $e'));
 
     // rooms
     //     .doc(roomID)
