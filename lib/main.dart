@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:strix/config/route_generator.dart';
 import 'package:strix/services/service_locator.dart';
 import 'package:strix/services/authorization/authorization_abstract.dart';
-import 'package:strix/ui/screens/video_background.dart';
+import 'package:strix/ui/screens/landing_screen.dart';
+//import 'package:strix/ui/screens/video_background.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +33,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Strix',
-      initialRoute: VideoBackground.routeId, //MainGameScreen.route_id,
+      initialRoute: LandingScreen.routeId, //VideoBackground.routeId, //MainGameScreen.route_id,
       onGenerateRoute: RouteGenerator.generateRoute,
       theme: ThemeData(
         // This makes the visual density adapt to the platform that you run
@@ -45,7 +46,7 @@ class MyApp extends StatelessWidget {
         accentColor: Colors.cyan,
         splashColor: Colors.cyan,
         //textTheme: ,
-        scaffoldBackgroundColor: Colors.grey[900],
+        scaffoldBackgroundColor: Colors.grey[900], // only call screen??
 
         dialogBackgroundColor: Colors.red,
 

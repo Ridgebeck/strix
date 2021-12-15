@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:strix/business_logic/classes/dynamic_data.dart';
 import 'package:strix/services/database/game_doc_abstract.dart';
 import '../../services/service_locator.dart';
-import 'package:strix/business_logic/classes/room.dart';
 
 // This class handles the conversion and puts it in a form convenient
 // for displaying on a view (without knowing anything about any particular view).
@@ -9,12 +9,18 @@ class WaitingRoomLogic {
   final GameDoc _gameDoc = serviceLocator<GameDoc>();
   bool start = false;
 
-  // provide stream of game room to UI
-  Stream<Room?> roomDocStream(String roomID) {
+  // provide stream of dynamic data to UI
+  Stream<DynamicData?> dynamicDataStream({required String roomID}) {
     // check if returned data from stream makes sense
-    debugPrint('ROOM DOC STREAM CALLED');
-    return _gameDoc.getDocStream(roomID: roomID);
+    return _gameDoc.getDataStream(roomID: roomID);
   }
+
+  // // provide stream of game room to UI
+  // Stream<Room?> roomDocStream(String roomID) {
+  //   // check if returned data from stream makes sense
+  //   debugPrint('ROOM DOC STREAM CALLED');
+  //   return _gameDoc.getDocStream(roomID: roomID);
+  // }
 
   // try to start a game if start button is pushed
   Future<void> startGame({

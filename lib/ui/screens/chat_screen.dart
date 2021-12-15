@@ -1,156 +1,253 @@
+import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:strix/business_logic/classes/chat.dart';
 import 'package:strix/business_logic/classes/player.dart';
-import 'package:strix/business_logic/classes/room.dart';
 import 'package:strix/business_logic/logic/chat_room_logic.dart';
+import 'package:strix/config/constants.dart';
+import 'package:strix/services/game_state/game_state.dart';
 import 'package:strix/services/service_locator.dart';
 import 'package:strix/services/authorization/authorization_abstract.dart';
 import 'package:strix/ui/widgets/chat_message.dart';
 
-class ChatScreen extends StatelessWidget {
-  final Room roomData;
-  //final bool newMessage;
-  ChatScreen({
+const double kTextFieldHeight = 65;
+const double kTopChatAreaHeight = 80;
+
+class ChatScreen extends StatefulWidget {
+  const ChatScreen({
     Key? key,
-    required this.roomData,
-    //required this.newMessage,
   }) : super(key: key);
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final GameState _gameState = serviceLocator<GameState>();
+  final String roomID = serviceLocator<GameState>().staticData == null
+      ? "123456"
+      : serviceLocator<GameState>().staticData!.roomID;
+  final int maxInputChar = serviceLocator<GameState>().staticData == null
+      ? 200
+      : serviceLocator<GameState>().staticData!.maximumInputCharacters;
 
   final _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final Authorization _authorization = serviceLocator<Authorization>();
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    // set chat screen state so that it can be updated externally
+    _gameState.chatScreenState = this;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    Chat chatData = roomData.chat;
-    return Stack(
-      children: [
-        Container(
-          color: Colors.blueGrey[500],
-          height: MediaQuery.of(context).size.height * 0.5,
-        ),
-        SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: MediaQuery.of(context).size.height * 0.02,
-            ),
-            child: SizedBox(
-              //color: Colors.blue,
-              height: MediaQuery.of(context).size.height * 0.08,
-              child: Row(
+    return StreamBuilder(
+        stream: ChatRoomLogic().chatStream(roomID: roomID),
+        // TODO: use initial data instead of empty container?
+        //initialData: ,
+        builder: (BuildContext context, AsyncSnapshot<Chat?> snapshot) {
+          Chat? chatData = snapshot.data;
+          // handle chat data being null
+          if (chatData == null) {
+            if (snapshot.connectionState == ConnectionState.active) {
+              // data is null after initialization (issue)
+              // TODO: error handling? (e.g. wrong roomID)
+              debugPrint('ERROR - chat data is null');
+              return Container(color: Colors.red);
+            } else {
+              // data is null during initialization
+              return Container();
+            }
+          }
+
+          // create reduced list and delay specific bot message
+          List<Message> reducedList = ChatRoomLogic().createReducedList(chatData.messages.toList());
+
+          return Stack(
+            children: [
+              Column(
                 children: [
-                  const Expanded(
-                    flex: 25,
-                    child: Center(
-                      child: FractionallySizedBox(
-                        widthFactor: 0.65,
-                        heightFactor: 0.65,
-                        child: FittedBox(
-                          child: Icon(
-                            Icons.message_outlined,
-                            size: 75.0,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                   Expanded(
-                    flex: 60,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Expanded(
-                          flex: 60,
-                          child: FittedBox(
-                            child: Text(
-                              'Field Agent John Mason',
-                              style: TextStyle(fontSize: 100.0),
-                            ),
+                    child: ListView.builder(
+                      itemCount: reducedList.length, //chatData.messages.length,
+                      reverse: true,
+                      shrinkWrap: true,
+                      controller: _scrollController,
+                      physics: const BouncingScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        double topPadding = 0;
+                        double bottomPadding = 0;
+                        // reverse list and save current message
+                        List<Message> reversedList = reducedList.reversed.toList();
+                        Message message = reversedList[index];
+
+                        // check if message was from current player, team member, or a bot
+                        bool fromTeam = message.author is Player;
+                        bool fromMe = fromTeam
+                            ? _authorization.getCurrentUserID() == message.author.uid
+                            : false;
+
+                        // add padding to bottom message
+                        if (index == 0) {
+                          bottomPadding = MediaQuery.of(context).padding.bottom + kTextFieldHeight;
+                        }
+                        // add padding to top message
+                        if (index == reversedList.length - 1) {
+                          topPadding = MediaQuery.of(context).padding.top + kTopChatAreaHeight;
+                        }
+
+                        if (message.delayTime != Duration()) {
+                          print(
+                              "MESSAGE WITH INDEX ${message.index} IS DELAYED BY ${message.delayTime}");
+                          print("LIST INDEX: $index");
+                          print("TEXT: ${message.text}");
+                        }
+
+                        return Padding(
+                          padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
+                          child: ChatMessage(
+                            fromTeam: fromTeam,
+                            fromMe: fromMe,
+                            message: message,
                           ),
-                        ),
-                        Expanded(flex: 5, child: Container()),
-                        const Expanded(
-                            flex: 35,
-                            child: FractionallySizedBox(
-                              widthFactor: 0.7,
-                              child: FittedBox(
-                                child: Text(
-                                  'encrypted secured chat',
-                                  style: TextStyle(fontSize: 50.0),
-                                ),
-                              ),
-                            )),
-                      ],
+                        );
+                      },
                     ),
-                  ),
-                  Expanded(
-                    flex: 15,
-                    child: Container(),
                   ),
                 ],
               ),
-            ),
-          ),
-        ),
-        SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: MediaQuery.of(context).size.height * 0.02,
-                ),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.08,
-                  //color: Colors.red,
+              Positioned(
+                top: 0.0,
+                left: 0.0,
+                // height: MediaQuery.of(context).padding.top + 70.0,
+                width: MediaQuery.of(context).size.width,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(15.0),
+                    bottomRight: Radius.circular(15.0),
+                  ),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(
+                      sigmaX: kGlassBlurriness,
+                      sigmaY: kGlassBlurriness,
+                    ),
+                    child: Material(
+                      color: kGlassColor,
+                      elevation: kGlassElevation,
+                      child: Column(
+                        children: [
+                          SizedBox(height: MediaQuery.of(context).padding.top),
+                          SizedBox(
+                            height: kTopChatAreaHeight,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 15.0),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: Container(),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 6.0),
+                                      child: Container(
+                                        decoration: const BoxDecoration(
+                                          image: DecorationImage(
+                                            image: AssetImage('assets/pictures/owl_v4.png'),
+                                            fit: BoxFit.contain,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: Container(),
+                                  ),
+                                  Expanded(
+                                    flex: 10,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          flex: 4,
+                                          child: FittedBox(
+                                            child: chatData.botPersonality == null
+                                                ? const Text('no receiver found')
+                                                : Text(
+                                                    chatData.botPersonality!.title +
+                                                        ' ' +
+                                                        chatData.botPersonality!.firstName +
+                                                        ' ' +
+                                                        chatData.botPersonality!.lastName,
+                                                    style: const TextStyle(fontSize: 100.0),
+                                                  ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 1,
+                                          child: Container(),
+                                        ),
+                                        const Expanded(
+                                          flex: 3,
+                                          child: FittedBox(
+                                            child: Text(
+                                              "encrypted and secured STRIX chat",
+                                              style: TextStyle(fontSize: 100.0),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Container(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(25.0),
-                      topRight: Radius.circular(25.0),
-                    ),
-                    color: Colors.grey[900],
+              Positioned(
+                bottom: MediaQuery.of(context).padding.bottom - 1,
+                left: 0.0,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: kBottomBarRadius,
                   ),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: chatData.messages.length,
-                          reverse: true,
-                          shrinkWrap: true,
-                          controller: _scrollController,
-                          physics: const BouncingScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            List<Message> reversedList = chatData.messages.reversed.toList();
-                            Message message = reversedList[index];
-                            bool fromTeam = message.author is Player;
-                            bool fromMe = fromTeam
-                                ? _authorization.getCurrentUserID() == message.author.uid
-                                : false;
-                            bool delay =
-                                (index == 0 && fromTeam == false && reversedList.length > 1 // &&
-                                    //newMessage,
-                                    )
-                                    ? true
-                                    : false;
-
-                            return ChatMessage(
-                              fromTeam: fromTeam,
-                              fromMe: fromMe,
-                              message: message,
-                              delay: delay,
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        height: 60,
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(
+                      sigmaX: kGlassBlurriness,
+                      sigmaY: kGlassBlurriness,
+                    ),
+                    child: Material(
+                      elevation: kGlassElevation,
+                      color: Colors.transparent,
+                      child: Container(
+                        height: kTextFieldHeight,
+                        width: MediaQuery.of(context).size.width,
+                        color: kGlassColor,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 5.0),
+                          padding: const EdgeInsets.symmetric(vertical: 10.0),
                           child: Row(
                             children: [
                               Expanded(flex: 3, child: Container()),
@@ -159,18 +256,19 @@ class ChatScreen extends StatelessWidget {
                                 child: Container(
                                   decoration: BoxDecoration(
                                     color: Colors.blueGrey[800],
-                                    borderRadius: BorderRadius.circular(15.0),
+                                    borderRadius: BorderRadius.circular(50.0),
                                   ),
                                   child: TextField(
+                                    cursorColor: Colors.white,
                                     controller: _textController,
                                     textAlignVertical: TextAlignVertical.center,
                                     expands: true,
                                     maxLines: null,
-                                    maxLength: roomData.maximumInputCharacters,
-                                    //maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                                    maxLength: maxInputChar,
+                                    maxLengthEnforcement: MaxLengthEnforcement.enforced,
                                     decoration: const InputDecoration(
                                       hintText: 'Type your message here...',
-                                      counterText: "",
+                                      counterText: "", // takes too much room
                                       contentPadding:
                                           EdgeInsets.symmetric(horizontal: 20.0, vertical: 0.0),
                                       border: InputBorder.none,
@@ -183,7 +281,7 @@ class ChatScreen extends StatelessWidget {
                                 onPressed: () {
                                   if (_textController.text.isNotEmpty) {
                                     ChatRoomLogic()
-                                        .addMessage(room: roomData, text: _textController.text);
+                                        .addMessage(roomID: roomID, text: _textController.text);
                                     _textController.clear();
                                     _scrollController.animateTo(
                                       0.0,
@@ -193,10 +291,10 @@ class ChatScreen extends StatelessWidget {
                                   }
                                 },
                                 child: const FittedBox(
-                                  child: Icon(
-                                    Icons.send,
+                                  child: FaIcon(
+                                    FontAwesomeIcons.solidPaperPlane,
                                     color: Colors.blueGrey,
-                                    size: 35.0,
+                                    size: 25.0,
                                   ),
                                 ),
                               ),
@@ -205,14 +303,12 @@ class ChatScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ],
-          ),
-        ),
-      ],
-    );
+          );
+        });
   }
 }

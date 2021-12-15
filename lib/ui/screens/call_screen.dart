@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:strix/business_logic/classes/call.dart';
-import 'package:strix/business_logic/classes/room.dart';
 import 'package:video_player/video_player.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:strix/business_logic/logic/next_milestone_logic.dart';
 
 class CallScreen extends StatefulWidget {
   static const String routeId = 'call_screen';
-  final Room room;
+  final Call call;
 
-  const CallScreen({Key? key, required this.room}) : super(key: key);
+  const CallScreen({Key? key, required this.call}) : super(key: key);
 
   @override
   _CallScreenState createState() => _CallScreenState();
@@ -17,20 +16,11 @@ class CallScreen extends StatefulWidget {
 
 class _CallScreenState extends State<CallScreen> {
   late VideoPlayerController _controller;
-  late Call call;
-  late String roomID;
   bool closing = false;
 
   @override
   void initState() {
-    // get roomID
-    roomID = widget.room.roomID;
-    // find current progress entry
-    AvailableAssetEntry currentEntry = widget.room.availableAssets.singleWhere(
-        (element) => element.entryName == widget.room.gameProgress);
-    // get call of current entry
-    call = currentEntry.call!; //has been null checked on main screen
-    _controller = VideoPlayerController.asset('assets/calls/${call.callFile}')
+    _controller = VideoPlayerController.asset('assets/calls/${widget.call.callFile}')
       ..initialize().then((_) {
         _controller.setVolume(1.0);
         _controller.play();
@@ -39,8 +29,8 @@ class _CallScreenState extends State<CallScreen> {
             // set variable to closing video to avoid
             // changing milestone multiple times
             closing = true;
-
-            await NextMilestoneLogic().moveToNextMilestone(roomID: roomID);
+            // TODO: Use AWAIT or close and watch the screen to change?
+            NextMilestoneLogic().moveToNextMilestone();
             // pop screen when call has been finished
             Navigator.of(context).pop();
           }

@@ -3,6 +3,7 @@ import 'package:strix/business_logic/classes/person.dart';
 import 'package:strix/config/constants.dart';
 import 'call.dart';
 import 'chat.dart';
+import 'goals.dart';
 import 'player.dart';
 
 class Room {
@@ -58,12 +59,12 @@ class DataEntry {
   List<String>? messages;
   List<String>? videos;
 
-  Map<DataDetails, List<String>?> toMap() {
+  Map<DataType, List<String>?> toMap() {
     return {
-      DataCategory.images: images,
-      DataCategory.social: social,
-      DataCategory.messages: messages,
-      DataCategory.videos: videos,
+      DataType.images: images,
+      DataType.social: social,
+      DataType.messages: messages,
+      DataType.videos: videos,
     };
   }
 
@@ -86,16 +87,6 @@ class MissionEntry {
     this.goalList = const [],
     this.profileEntries = const [],
     this.briefing,
-  });
-}
-
-class GoalAndHints {
-  final String goal;
-  final List<String> hints;
-
-  GoalAndHints({
-    required this.goal,
-    this.hints = const [],
   });
 }
 

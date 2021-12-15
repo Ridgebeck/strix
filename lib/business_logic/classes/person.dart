@@ -22,4 +22,18 @@ class Person {
     this.hobbies,
     this.color,
   });
+
+  factory Person.fromDict(dynamic dict) {
+    return Person(
+      firstName: dict['firstName'],
+      lastName: dict['lastName'],
+      title: dict['title'],
+      profileImage: dict['profileImage'],
+      age: dict['age'],
+      profession: dict['profession'],
+      instagram: dict['instagram'],
+      hobbies: dict['hobbies'],
+      color: dict['color'],
+    );
+  }
 }

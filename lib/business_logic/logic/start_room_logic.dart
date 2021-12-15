@@ -13,18 +13,19 @@ class StartRoomLogic {
   Future<String?> addRoom() async {
     String? confirmedRoomID;
 
-    // try maximum 5 times
-    for (int i = 0; i < 5; i++) {
+    // try maximum 3 times
+    for (int i = 0; i < 3; i++) {
       // create new game with roomID
-      confirmedRoomID = await _gameDoc.addNewRoom(roomID: _getRandomString(6));
+      // TODO: make mission1 a variable?
+      confirmedRoomID = await _gameDoc.addNewRoom(roomID: _getRandomString(6), mission: 'mission1');
       // exit for loop if docID is not null
       if (confirmedRoomID != null) {
         break;
       }
     }
 
-    // save roomID to local memory
-    //await _storage.saveDatabaseReference(confirmedRoomID);
+    // save staticData to local memory
+    //await _storage.saveDatabaseReference(staticData);
 
     // return roomID or null
     return confirmedRoomID;

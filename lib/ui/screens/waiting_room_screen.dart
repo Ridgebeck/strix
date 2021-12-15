@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:strix/business_logic/classes/player.dart';
-import 'package:strix/business_logic/classes/room.dart';
+import 'package:strix/business_logic/classes/dynamic_data.dart';
 import 'package:strix/business_logic/logic/waiting_room_logic.dart';
+import 'package:strix/services/game_state/game_state.dart';
 import 'package:strix/services/service_locator.dart';
-import 'package:strix/services/authorization/authorization_abstract.dart';
-import 'package:strix/config/constants.dart';
+//import 'package:strix/services/authorization/authorization_abstract.dart';
 import 'package:strix/ui/widgets/bordered_button.dart';
 import 'package:strix/ui/widgets/top_icon.dart';
 
-//import 'briefing_screen.dart';
 import 'main_game_screen.dart';
 
 class WaitingRoomScreen extends StatefulWidget {
@@ -22,7 +20,8 @@ class WaitingRoomScreen extends StatefulWidget {
 }
 
 class _WaitingRoomScreenState extends State<WaitingRoomScreen> with SingleTickerProviderStateMixin {
-  final Authorization _authorization = serviceLocator<Authorization>();
+  //final Authorization _authorization = serviceLocator<Authorization>();
+  final GameState _gameState = serviceLocator<GameState>();
   late Animation _animation;
   late AnimationController _animationController;
 
@@ -47,9 +46,12 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
-    final Stream<Room?> roomStream = WaitingRoomLogic().roomDocStream(widget.roomID);
+    final Stream<DynamicData?> roomStream =
+        WaitingRoomLogic().dynamicDataStream(roomID: widget.roomID);
     int numberPlayers = 0;
-    int minimumPlayers = 0;
+    int minimumPlayers = _gameState.staticData!.minimumPlayers;
+    int maximumPlayers = _gameState.staticData!.maximumPlayers;
+    String gameTitle = _gameState.staticData!.gameTitle;
 
     return WillPopScope(
       onWillPop: () async => false,
@@ -77,8 +79,8 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> with SingleTicker
                     flex: 20,
                     child: StreamBuilder(
                         stream: roomStream, // room snapshot or null on error
-                        builder: (BuildContext context, AsyncSnapshot<Room?> snapshot) {
-                          Room? snapData = snapshot.data;
+                        builder: (BuildContext context, AsyncSnapshot<DynamicData?> snapshot) {
+                          DynamicData? snapData = snapshot.data;
                           // check if stream is waiting for connection
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             // TODO: IMPLEMENT LOADING SCREEN
@@ -96,7 +98,6 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> with SingleTicker
                           else {
                             // save for buttons important data in local variables
                             numberPlayers = snapData.players.length;
-                            minimumPlayers = snapData.minimumPlayers;
 
                             // add callback to check for gamProgress change
                             // after every frame and move to game screen
@@ -104,7 +105,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> with SingleTicker
                               (_) {
                                 // check if game progress variable has changed from
                                 // waiting status
-                                if (snapData.gameProgress != kWaitingStatus) {
+                                if (snapData.gameProgressID >= 0) {
                                   // pop complete stack and move to the main game screen
                                   Navigator.of(context).pushNamedAndRemoveUntil(
                                     MainGameScreen.routeId,
@@ -115,20 +116,20 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> with SingleTicker
                               },
                             );
 
-                            // initialize with dummy data
-                            Player thisPlayer = noPlayer;
-                            // find player in player list
-                            try {
-                              thisPlayer = snapData.players
-                                  .where((Player player) =>
-                                      player.uid == _authorization.getCurrentUserID())
-                                  .single;
-                            } catch (e) {
-                              debugPrint('Error while fetching player data. Error: $e');
-                              // todo : error handling when no player found?
-                              // happens when player leaves and stream is still open
-                            }
-                            //print(thisPlayer);
+                            // // initialize with dummy data
+                            // Player thisPlayer = noPlayer;
+                            // // find player in player list
+                            // try {
+                            //   thisPlayer = snapData.players
+                            //       .where((Player player) =>
+                            //           player.uid == _authorization.getCurrentUserID())
+                            //       .single;
+                            // } catch (e) {
+                            //   debugPrint('Error while fetching player data. Error: $e');
+                            //   // todo : error handling when no player found?
+                            //   // happens when player leaves and stream is still open
+                            // }
+                            // //print(thisPlayer);
 
                             return AnimatedBuilder(
                                 animation: _animation,
@@ -166,7 +167,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> with SingleTicker
                                               widthFactor: 0.75,
                                               child: FittedBox(
                                                 child: Text(
-                                                  snapData.gameTitle.toUpperCase(),
+                                                  gameTitle.toUpperCase(),
                                                   style: const TextStyle(
                                                     fontSize: 70.0,
                                                     fontFamily: 'Raleway',
@@ -190,7 +191,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> with SingleTicker
                                               widthFactor: 0.75,
                                               child: FittedBox(
                                                 child: Text(
-                                                  snapData.roomID,
+                                                  widget.roomID,
                                                   style: const TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 70.0,
@@ -235,7 +236,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> with SingleTicker
                                                     transform: Matrix4.translationValues(
                                                         _animation.value * -1200, 0.0, 0.0),
                                                     child: Text(
-                                                      '${snapData.minimumPlayers} to ${snapData.maximumPlayers} agents needed',
+                                                      '$minimumPlayers to $maximumPlayers agents needed',
                                                       style: const TextStyle(
                                                         color: Colors.white,
                                                         fontFamily: 'Raleway',

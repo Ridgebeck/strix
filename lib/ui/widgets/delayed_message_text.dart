@@ -2,6 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:strix/business_logic/classes/chat.dart';
+import 'package:strix/services/game_state/game_state.dart';
+import 'package:strix/services/service_locator.dart';
+
+final GameState _gameState = serviceLocator<GameState>();
 
 class DelayedMessageText extends StatefulWidget {
   const DelayedMessageText({
@@ -26,10 +30,31 @@ class _DelayedMessageTextState extends State<DelayedMessageText> {
     super.initState();
     // TODO: Add reading delay?
     setState(() {
+      print("DELAYING MESSAGE: ${widget.message.index}");
+      print("DELAY TIME: ${widget.message.delayTime}");
       text = 'typing...';
     });
-    _typingTimer = Timer(
-        Duration(milliseconds: 500 + widget.message.text.length * 35), () {
+    _typingTimer = Timer(widget.message.delayTime, () {
+      print("TIMER OVER");
+      _typingTimer.cancel();
+      if (widget.message.index != null) {
+        print("SETTING INDEX, TIME!");
+        _gameState.displayedBotMessages = widget.message.index!;
+        _gameState.lastTimeTyping = DateTime.now();
+
+        State? chatState = _gameState.chatScreenState;
+        if (chatState != null) {
+          if (chatState.mounted) {
+            chatState.setState(() {
+              print("CHAT UPDATED");
+            });
+          }
+        }
+
+        // TODO: SET STATE - UPDATE CHAT SCREEN
+      } else {
+        print("INDEX OF BOT MESSAGE WAS NULL - ERROR!");
+      }
       setState(() {
         text = widget.message.text;
       });
@@ -38,8 +63,8 @@ class _DelayedMessageTextState extends State<DelayedMessageText> {
 
   @override
   void dispose() {
-    super.dispose();
     _typingTimer.cancel();
+    super.dispose();
   }
 
   @override

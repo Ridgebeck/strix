@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter/material.dart';
 import 'package:strix/business_logic/classes/person.dart';
@@ -68,6 +67,23 @@ class MarkerData {
     this.active = true,
     this.personsHere = const [],
   });
+
+  factory MarkerData.fromDict(dynamic markerDict) {
+    return MarkerData(
+      name: markerDict['name'],
+      position: LatLng(markerDict['latitude'], markerDict['longitude']),
+      type: markerDict['type'] == 'store'
+          ? MarkerType.store
+          : markerDict['type'] == 'restaurant'
+              ? MarkerType.restaurant
+              : markerDict['type'] == 'residential'
+                  ? MarkerType.residential
+                  : markerDict['type'] == 'target'
+                      ? MarkerType.target
+                      : MarkerType.poi,
+      infoText: markerDict['infoText'],
+    );
+  }
 }
 
 class PersonMarkerData {
@@ -88,4 +104,23 @@ class PersonMarkerData {
     this.onFoot = true,
     this.infoText,
   });
+
+  factory PersonMarkerData.fromDict(dynamic markerDict) {
+    return PersonMarkerData(
+      person: Person.fromDict(markerDict['person']),
+      positionPath: _createPositionPath(markerDict['latitudePath'], markerDict['longitudePath']),
+      currentPosition: LatLng(markerDict['latitudePath'][0], markerDict['longitudePath'][0]),
+      infoText: markerDict['infoText'],
+      onFoot: markerDict['onFoot'] == 'false' ? false : true,
+    );
+  }
+}
+
+List<LatLng> _createPositionPath(List<dynamic> lats, List<dynamic> longs) {
+  List<LatLng> path = [];
+
+  lats.asMap().forEach((index, lat) {
+    path.add(LatLng(lat, longs[index]));
+  });
+  return path;
 }

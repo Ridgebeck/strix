@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:strix/business_logic/classes/person.dart';
-import 'package:strix/config/constants.dart';
+import 'package:strix/ui/widgets/back_button.dart';
+import 'package:strix/ui/widgets/safe_area_glas_top.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -23,7 +24,7 @@ class ProfileScreen extends StatelessWidget {
             ClipPath(
               clipper: MyDiagonalClipper(),
               child: Container(
-                height: screenHeight / 2,
+                height: screenHeight / 1.75,
                 decoration: BoxDecoration(
                   image: DecorationImage(
                     image: AssetImage('assets/profile_pictures/' + person.profileImage),
@@ -144,19 +145,9 @@ class ProfileScreen extends StatelessWidget {
         Positioned(
           top: MediaQuery.of(context).padding.top + 10.0,
           left: MediaQuery.of(context).padding.left + 10.0,
-          child: FloatingActionButton(
-            mini: true,
-            backgroundColor: kAccentColor,
-            splashColor: kBackgroundColorLight,
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(
-              Icons.navigate_before_sharp,
-              color: Colors.black,
-            ),
-          ),
+          child: const BackButtonStrix(),
         ),
+        const SafeAreaGlasTop(),
       ]),
     );
   }

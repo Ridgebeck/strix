@@ -1,54 +1,64 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:strix/business_logic/classes/room.dart';
+import 'package:strix/business_logic/classes/static_data.dart';
+import 'package:strix/config/constants.dart';
 import 'package:strix/ui/widgets/item_carousel.dart';
+import 'package:strix/ui/widgets/safe_area_glas_top.dart';
 
-class DataScreen extends StatefulWidget {
-  final AvailableAssetEntry assets;
+class DataScreen extends StatelessWidget {
+  final DataEntry? data;
+  final bool hasInsta;
 
   const DataScreen({
     Key? key,
-    required this.assets,
+    required this.data,
+    required this.hasInsta,
   }) : super(key: key);
 
   @override
-  _DataScreenState createState() => _DataScreenState();
-}
-
-class _DataScreenState extends State<DataScreen> {
-  @override
   Widget build(BuildContext context) {
-    AvailableAssetEntry assets = widget.assets;
+    print("BUILDING DATA SCREEN");
 
-    if (assets.data == null) {
+    print("IMAGE DETAILS: ${DataType.images.details.title}");
+
+    // check if data is null
+    if (data == null) {
       // TODO: nicer placeholder widget
-      return const Center(child: Text("No data received yet."));
-    } else {
-      // create empty widget list
-      List<Widget> dataPageCarousels = [];
-      // go through all item categories
-      assets.data!.toMap().forEach((itemDataType, itemData) {
-        if (itemData != null) {
-          // create string list
-          List<String> stringList = [];
-          for (String itemString in itemData) {
-            stringList.add(itemDataType.folderPath + itemString);
-          }
+      return const Center(child: Text("no data received yet"));
+    }
+    // create empty widget list
+    List<Widget> dataPageCarousels = [];
+
+    // go through all data types
+    for (DataType type in DataType.values) {
+      // show social data only when group has no insta
+      if (type != DataType.social || type == DataType.social && hasInsta == false) {
+        // create path list for all items of data type
+        List<String> pathList = [];
+        for (String assetString in data!.getData(type: type)) {
+          pathList.add(type.details.folderPath + assetString);
+        }
+        if (pathList.isNotEmpty) {
           // reverse order
-          stringList = stringList.reversed.toList();
+          pathList = pathList.reversed.toList();
           // add item carousel to list
           dataPageCarousels.add(ItemCarousel(
-            itemsList: stringList,
-            dataDetails: itemDataType,
+            itemsList: pathList,
+            type: type,
           ));
         }
-      });
-
-      // display carousel list in scrollable list view
-      return ListView(
-        physics: const BouncingScrollPhysics(),
-        children: dataPageCarousels,
-      );
+      }
     }
+
+    // display carousel list in scrollable list view
+    return Stack(
+      children: [
+        ListView(
+          physics: const BouncingScrollPhysics(),
+          children: dataPageCarousels,
+        ),
+        const Hero(tag: "SafeAreaGlasTop", child: SafeAreaGlasTop()),
+      ],
+    );
   }
 }

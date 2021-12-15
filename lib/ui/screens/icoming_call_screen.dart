@@ -2,32 +2,30 @@ import 'package:flutter/material.dart';
 // import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:simple_animations/simple_animations.dart';
 import 'package:strix/business_logic/classes/call.dart';
-import 'package:strix/business_logic/classes/room.dart';
 import 'package:wakelock/wakelock.dart';
 import 'call_screen.dart';
 
 class IncomingCallScreen extends StatefulWidget {
   static const String routeId = 'incoming_call_screen';
 
-  final Room room;
-  const IncomingCallScreen({Key? key, required this.room}) : super(key: key);
+  final Call call;
+  //final Room room;
+  const IncomingCallScreen({Key? key, required this.call}) : super(key: key);
 
   @override
   _IncomingCallScreenState createState() => _IncomingCallScreenState();
 }
 
 class _IncomingCallScreenState extends State<IncomingCallScreen> {
-  late Call call;
-
   @override
   void initState() {
     // enable wakelock to prevent screen turning off
     Wakelock.enable();
-    // find current progress entry
-    AvailableAssetEntry currentEntry = widget.room.availableAssets.singleWhere(
-        (element) => element.entryName == widget.room.gameProgress);
-    // get call of current entry
-    call = currentEntry.call!; //has been null checked on main screen
+    // // find current progress entry
+    // AvailableAssetEntry currentEntry = widget.room.availableAssets.singleWhere(
+    //     (element) => element.entryName == widget.room.gameProgress);
+    // // get call of current entry
+    // call = currentEntry.call!; //has been null checked on main screen
     //FlutterRingtonePlayer.playRingtone(asAlarm: true);
     super.initState();
   }
@@ -93,7 +91,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
                                 borderRadius: BorderRadius.circular(500.0),
                                 image: DecorationImage(
                                   image: AssetImage(
-                                      'assets/profile_pictures/${call.person.profileImage}'),
+                                      'assets/profile_pictures/${widget.call.person.profileImage}'),
                                   fit: BoxFit.cover,
                                 ),
                               ),
@@ -110,7 +108,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
                   widthFactor: 0.8,
                   child: FittedBox(
                     child: Text(
-                      (call.person.firstName + ' ' + call.person.lastName)
+                      (widget.call.person.firstName + ' ' + widget.call.person.lastName)
                           .toUpperCase(),
                       style: const TextStyle(fontSize: 75.0),
                     ),
@@ -124,7 +122,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
                   widthFactor: 0.5,
                   child: FittedBox(
                     child: Text(
-                      call.person.title,
+                      widget.call.person.title,
                       style: const TextStyle(fontSize: 20.0),
                     ),
                   ),
@@ -143,9 +141,8 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
                           iconColor: Colors.green,
                           onTapFunction: () {
                             //FlutterRingtonePlayer.stop();
-                            Navigator.of(context).pushReplacementNamed(
-                                CallScreen.routeId,
-                                arguments: widget.room);
+                            Navigator.of(context)
+                                .pushReplacementNamed(CallScreen.routeId, arguments: widget.call);
                           },
                         ),
                         CallButton(

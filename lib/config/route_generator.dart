@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:strix/business_logic/classes/call.dart';
 import 'package:strix/business_logic/classes/person.dart';
-import 'package:strix/business_logic/classes/room.dart';
 import 'package:strix/ui/screens/briefing_screen.dart';
 import 'package:strix/ui/screens/call_screen.dart';
 import 'package:strix/ui/screens/icoming_call_screen.dart';
@@ -104,20 +104,20 @@ class RouteGenerator {
         return _errorRoute();
 
       case IncomingCallScreen.routeId:
-        if (arguments is Room) {
+        if (arguments is Call) {
           return MaterialPageRoute(
             builder: (_) => IncomingCallScreen(
-              room: arguments,
+              call: arguments,
             ),
           );
         }
         return _errorRoute();
 
       case CallScreen.routeId:
-        if (arguments is Room) {
+        if (arguments is Call) {
           return MaterialPageRoute(
             builder: (_) => CallScreen(
-              room: arguments,
+              call: arguments,
             ),
           );
         }

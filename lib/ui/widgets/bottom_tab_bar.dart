@@ -1,31 +1,22 @@
-//import 'dart:ui';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:strix/config/constants.dart';
+import 'package:strix/services/game_state/game_state.dart';
+import 'package:strix/services/service_locator.dart';
 
-// TODO: make constants or add to theme
-const Color kSelectedTabColor = Colors.white;
-const Color kUnselectedTabColor = Colors.blueGrey;
-Color glassColor = Colors.black.withOpacity(0.25);
-const double kGlassBlurriness = 15.0;
-const Radius kBottomBarRadius = Radius.circular(15.0);
+import 'new_indicator_dot.dart';
 
 class BottomTabBar extends StatelessWidget {
   final TabController tabController;
-  //final bool newBriefingData;
-  //final bool newMissionData;
-  //final bool newData;
-  //final bool newChatData;
+  final Radius bottomBarRadius;
+  final GameState _gameState = serviceLocator<GameState>();
 
-  const BottomTabBar({
+  BottomTabBar({
     Key? key,
     required this.tabController,
-    //required this.newBriefingData,
-    //required this.newMissionData,
-    //required this.newData,
-    //required this.newChatData,
+    required this.bottomBarRadius,
   }) : super(key: key);
 
   @override
@@ -36,8 +27,8 @@ class BottomTabBar extends StatelessWidget {
         splashColor: kAccentColor.withOpacity(0.2),
       ),
       child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(
-          top: kBottomBarRadius,
+        borderRadius: BorderRadius.vertical(
+          top: bottomBarRadius,
         ),
         child: BackdropFilter(
           filter: ImageFilter.blur(
@@ -46,9 +37,9 @@ class BottomTabBar extends StatelessWidget {
           ),
           child: Material(
             color: Colors.transparent,
-            elevation: 2.0,
+            elevation: kGlassElevation,
             child: Container(
-              color: glassColor,
+              color: kGlassColor,
               child: TabBar(
                 indicatorColor: kAccentColor,
                 labelColor: kSelectedTabColor,
@@ -59,29 +50,29 @@ class BottomTabBar extends StatelessWidget {
                     tabController: tabController,
                     iconData: Icons.folder_open,
                     text: 'Mission',
-                    //newData: newBriefingData,
-                    index: 0,
+                    newData: _gameState.newData.newMissionData,
+                    index: kMissionTabIndex,
                   ),
                   SelectableTab(
                     tabController: tabController,
                     iconData: Icons.map,
                     text: 'Map',
-                    //newData: newMissionData,
-                    index: 1,
+                    newData: _gameState.newData.newMapData,
+                    index: kMapTabIndex,
                   ),
                   SelectableTab(
                     tabController: tabController,
                     iconData: Icons.cloud_outlined,
                     text: 'Data',
-                    //newData: newData,
-                    index: 2,
+                    newData: _gameState.newData.newMediaData.isThereNewData(),
+                    index: kDataTabIndex,
                   ),
                   SelectableTab(
                     tabController: tabController,
                     iconData: Icons.chat_bubble_outline,
                     text: 'Chat',
-                    //newData: newChatData,
-                    index: 3,
+                    newData: _gameState.newData.newChatData,
+                    index: kChatTabIndex,
                   ),
                 ],
               ),
@@ -99,12 +90,12 @@ class SelectableTab extends StatelessWidget {
     required this.tabController,
     required this.iconData,
     required this.text,
-    //required this.newData,
+    required this.newData,
     required this.index,
   }) : super(key: key);
 
   final TabController tabController;
-  //final bool newData;
+  final bool newData;
   final String text;
   final int index;
   final IconData iconData;
@@ -117,38 +108,23 @@ class SelectableTab extends StatelessWidget {
         children: [
           Icon(
             iconData,
-            color: tabController.index == index ? kSelectedTabColor : kUnselectedTabColor,
-            // newData
-            //         ? kAccentColor
-            //         : kUnselectedTabColor,
+            color: tabController.index == index
+                ? kSelectedTabColor
+                : newData
+                    ? kAccentColor
+                    : kUnselectedTabColor,
           ),
-          Positioned(
-            right: -10.0,
-            top: -10.0,
-            child: Visibility(
-              visible: tabController.index == index ? false : false,
-              // newData
-              //         ? true
-              //         : false,
-              child: Container(
-                width: 10.0,
-                height: 10.0,
-                decoration: BoxDecoration(
-                  color: kAccentColor,
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-              ),
-            ),
-          ),
+          NewIndicatorDot(newData: newData),
         ],
       ),
       child: Text(
         text,
         style: TextStyle(
-          color: tabController.index == index ? kSelectedTabColor : kUnselectedTabColor,
-          // newData
-          //         ? kAccentColor
-          //         : kUnselectedTabColor,
+          color: tabController.index == index
+              ? kSelectedTabColor
+              : newData
+                  ? kAccentColor
+                  : kUnselectedTabColor,
         ),
       ),
     );

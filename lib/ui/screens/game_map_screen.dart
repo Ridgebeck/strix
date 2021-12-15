@@ -5,18 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:strix/business_logic/classes/marker.dart';
-import 'package:strix/business_logic/classes/room.dart';
+import 'package:strix/business_logic/classes/static_data.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:strix/business_logic/logic/map_logic.dart';
 import 'package:strix/config/constants.dart';
-import 'package:strix/services/game_state/game_state_abstract.dart';
+import 'package:strix/services/game_state/game_state.dart';
 import 'package:strix/services/service_locator.dart';
+import 'package:strix/ui/widgets/safe_area_glas_top.dart';
 import 'package:tuple/tuple.dart';
-
-// TODO: make constants or add to theme (see also bottom tab bar)
-Color glassColor = Colors.black.withOpacity(0.25);
-const double kGlassBlurriness = 15.0;
-const double glassElevation = 2.0;
 
 // TODO: import starting position or calculate from map
 // set Derek's Apartment as starting point
@@ -30,15 +26,12 @@ const double maxZoom = 16.0;
 const mapBackgroundColor = Color(0xFF212121);
 const int mapAnimTimeMs = 1500;
 
-//GameState _gameState = serviceLocator<GameState>();
-
 class GameMapScreen extends StatefulWidget {
   final MapEntry? mapData;
-  final String roomID;
+
   const GameMapScreen({
     Key? key,
     required this.mapData,
-    required this.roomID,
   }) : super(key: key);
 
   @override
@@ -47,6 +40,9 @@ class GameMapScreen extends StatefulWidget {
 
 class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMixin {
   final GameState _gameState = serviceLocator<GameState>();
+
+  // late StaticData? staticData;
+
   // late init controllers and stream subscription
   late final MapController mapController;
   late final PageController pageController;
@@ -57,15 +53,17 @@ class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMi
   @override
   void initState() {
     super.initState();
-    // set expanded variable to same state
-    // as info tile state on startup
-    _gameState.setIsExpanded(_gameState.getShowMarkerDetails());
+    // // get static data
+    // staticData = _gameState.getStaticData();
+
+    // set expanded variable to same state as info tile state on startup
+    _gameState.isExpanded = _gameState.showMarkerDetails;
 
     // initialize controllers
     mapController = MapController();
     pageController = PageController(
       viewportFraction: 0.90,
-      initialPage: _gameState.getMarkerTilePage(),
+      initialPage: _gameState.markerTilePage,
     );
 
     // when map controller is ready
@@ -75,15 +73,15 @@ class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMi
         // after every tap-zoom or move event
         if (event is MapEventDoubleTapZoomEnd || event is MapEventMoveEnd) {
           // save current center position
-          _gameState.setCenterPosition(mapController.center);
+          _gameState.centerPosition = mapController.center;
           // save current current zoom level
-          _gameState.setZoom(mapController.zoom);
+          _gameState.zoom = mapController.zoom;
         }
       });
     });
 
     // set map state so that position animation can update screen
-    _gameState.setMapState(this);
+    _gameState.mapState = this;
   }
 
   @override
@@ -95,18 +93,23 @@ class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMi
 
   @override
   Widget build(BuildContext context) {
+    print("BUILDING MAP SCREEN");
+
+    //
+    MapEntry? mapData = widget.mapData;
+
     // create empty lists for markers and polylines
     List<Marker> markers = [];
     List<Polyline> polylines = [];
 
     // check if map data is null
-    if (widget.mapData == null) {
+    if (mapData == null) {
       // TODO: handle no map data?
       debugPrint("NO MAP DATA");
     } else {
       // create lists of markers and polylines (paths)
       Tuple2<List<Marker>, List<Polyline>> markerPolyLists = MapLogic().createMarkersAndPolylines(
-        mapData: widget.mapData!,
+        mapData: mapData,
         pageController: pageController,
       );
       markers = markerPolyLists.item1;
@@ -119,8 +122,8 @@ class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMi
           mapController: mapController,
           options: MapOptions(
             // set starting point and zoom limitations
-            center: _gameState.getCenterPosition(),
-            zoom: _gameState.getZoom(),
+            center: _gameState.centerPosition,
+            zoom: _gameState.zoom,
             maxZoom: maxZoom,
             minZoom: minimalZoom,
             // set pan boundaries based on zoom level
@@ -147,55 +150,52 @@ class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMi
         // don't show marker info tiles if mapData is null
         // or marker list is null or empty
         // prevents errors while loading / changing data
-        widget.mapData == null
+        mapData == null
             ? Container()
-            : widget.mapData!.markerList.isEmpty
+            : mapData.markerList.isEmpty
                 ? Container()
                 : Positioned(
                     bottom: MediaQuery.of(context).padding.bottom + 10.0,
                     child: AnimatedContainer(
                       onEnd: () {
-                        _gameState.getShowMarkerDetails()
-                            ? _gameState.setIsExpanded(true)
-                            : _gameState.setIsExpanded(false);
+                        _gameState.showMarkerDetails
+                            ? _gameState.isExpanded = true
+                            : _gameState.isExpanded = false;
                         setState(() {});
                       },
                       duration: const Duration(milliseconds: 750),
                       curve: Curves.fastOutSlowIn,
-                      height: _gameState.getShowMarkerDetails()
+                      height: _gameState.showMarkerDetails
                           ? (MediaQuery.of(context).size.height / 2.5)
                           : 120.0,
                       width: MediaQuery.of(context).size.width,
                       child: PageView.builder(
                         physics: const BouncingScrollPhysics(),
                         // TODO: Show no pages if only one entry
-                        //itemCount: widget.mapData!.markerList!.length == 1 ? 1 : null,
+                        //itemCount: mapData!.markerList!.length == 1 ? 1 : null,
                         onPageChanged: (pageIndex) {
                           // save current page
-                          _gameState.setMarkerTilePage(pageIndex);
+                          _gameState.markerTilePage = pageIndex;
 
                           // set only current marker as selected and update state
-                          for (MarkerData marker in widget.mapData!.markerList) {
+                          for (MarkerData marker in mapData.markerList) {
                             marker.selected = false;
                           }
-                          widget.mapData!.markerList[pageIndex % widget.mapData!.markerList.length]
-                              .selected = true;
+                          mapData.markerList[pageIndex % mapData.markerList.length].selected = true;
                           setState(() {});
 
                           // move to specified location
                           const MovingAnimation().createState().animatedMapMove(
                                 mapController: mapController,
-                                destLocation: widget
-                                    .mapData!
-                                    .markerList[pageIndex % widget.mapData!.markerList.length]
-                                    .position,
+                                destLocation: mapData
+                                    .markerList[pageIndex % mapData.markerList.length].position,
                                 corrected: true,
                               );
                         },
                         controller: pageController,
                         itemBuilder: (BuildContext context, int pageIndex) {
-                          MarkerData currentMarker = widget
-                              .mapData!.markerList[pageIndex % widget.mapData!.markerList.length];
+                          MarkerData currentMarker =
+                              mapData.markerList[pageIndex % mapData.markerList.length];
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 5.0),
                             child: ClipRRect(
@@ -207,10 +207,10 @@ class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMi
                                 ),
                                 child: Material(
                                   color: Colors.transparent,
-                                  elevation: glassElevation,
+                                  elevation: kGlassElevation,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: glassColor,
+                                      color: kGlassColor,
                                     ),
                                     child: Padding(
                                       padding: const EdgeInsets.all(20.0),
@@ -221,13 +221,13 @@ class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMi
                                             highlightColor: kAccentColor.withOpacity(0.2),
                                             splashColor: kAccentColor.withOpacity(0.2),
                                             onTap: () {
-                                              if (_gameState.getIsExpanded()) {
+                                              if (_gameState.isExpanded) {
                                                 setState(() {
-                                                  _gameState.setShowMarkerDetails(false);
+                                                  _gameState.showMarkerDetails = false;
                                                 });
                                               } else {
                                                 setState(() {
-                                                  _gameState.setShowMarkerDetails(true);
+                                                  _gameState.showMarkerDetails = true;
                                                 });
 
                                                 // move to specified location
@@ -327,12 +327,12 @@ class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMi
                                                       child: GestureDetector(
                                                         onTap: () {
                                                           setState(() {
-                                                            _gameState.setShowMarkerDetails(
-                                                                !_gameState.getShowMarkerDetails());
+                                                            _gameState.showMarkerDetails =
+                                                                !_gameState.showMarkerDetails;
                                                           });
                                                         },
                                                         child: FaIcon(
-                                                          _gameState.getShowMarkerDetails()
+                                                          _gameState.showMarkerDetails
                                                               ? FontAwesomeIcons.chevronDown
                                                               : FontAwesomeIcons.chevronUp,
                                                           color: Colors.grey.withOpacity(0.9),
@@ -345,13 +345,11 @@ class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMi
                                               ),
                                             ),
                                           ),
-                                          _gameState.getShowMarkerDetails() &
-                                                  _gameState.getIsExpanded()
+                                          _gameState.showMarkerDetails & _gameState.isExpanded
                                               //fullyExpanded
                                               ? const SizedBox(height: 15.0)
                                               : Container(),
-                                          _gameState.getShowMarkerDetails() &
-                                                  _gameState.getIsExpanded()
+                                          _gameState.showMarkerDetails & _gameState.isExpanded
                                               //fullyExpanded
                                               ? Expanded(
                                                   child: ListView(
@@ -386,19 +384,19 @@ class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMi
         // don't show agent locator if mapData is null
         // or personMarkerList is empty
         // prevents errors while loading / changing data
-        widget.mapData == null
+        mapData == null
             ? Container()
-            : widget.mapData!.personMarkerList.isEmpty
+            : mapData.personMarkerList.isEmpty
                 ? Container()
                 : Positioned(
                     left: 15,
                     top: MediaQuery.of(context).padding.top + 15,
                     child: Column(
-                      children: List.generate(widget.mapData!.personMarkerList.length, (index) {
-                        PersonMarkerData personMarker = widget.mapData!.personMarkerList[index];
+                      children: List.generate(mapData.personMarkerList.length, (index) {
+                        PersonMarkerData personMarker = mapData.personMarkerList[index];
                         return GestureDetector(
                           onTap: () {
-                            List<MarkerData> agentLocations = widget.mapData!.markerList
+                            List<MarkerData> agentLocations = mapData.markerList
                                 .where((list) => list.personsHere.contains(personMarker.person))
                                 .toList();
 
@@ -412,8 +410,8 @@ class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMi
                                   );
                             } else {
                               if (pageController.page ==
-                                  widget.mapData!.markerList.length * 100 +
-                                      widget.mapData!.markerList.indexOf(agentLocations[0])) {
+                                  mapData.markerList.length * 100 +
+                                      mapData.markerList.indexOf(agentLocations[0])) {
                                 // move to current agent location
                                 const MovingAnimation().createState().animatedMapMove(
                                       mapController: mapController,
@@ -425,8 +423,8 @@ class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMi
                                 // move to correct page
                                 // this triggers also a map move
                                 pageController.jumpToPage(
-                                  widget.mapData!.markerList.length * 100 +
-                                      widget.mapData!.markerList.indexOf(agentLocations[0]),
+                                  mapData.markerList.length * 100 +
+                                      mapData.markerList.indexOf(agentLocations[0]),
                                 );
                               }
                             }
@@ -464,6 +462,7 @@ class GameMapScreenState extends State<GameMapScreen> with TickerProviderStateMi
                       }),
                     ),
                   ),
+        const SafeAreaGlasTop(),
       ],
     );
   }

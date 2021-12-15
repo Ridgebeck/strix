@@ -8,13 +8,11 @@ class ImageMessage extends StatelessWidget {
     required this.radius,
     required this.fromMe,
     required this.message,
-    required this.delay,
   }) : super(key: key);
 
   final double radius;
   final bool fromMe;
   final Message message;
-  final bool delay;
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +28,7 @@ class ImageMessage extends StatelessWidget {
               : [Colors.blueGrey[400]!, Colors.blueGrey[900]!],
         ),
       ),
-      constraints:
-          BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.70),
+      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.70),
       child: Column(
         children: [
           Container(

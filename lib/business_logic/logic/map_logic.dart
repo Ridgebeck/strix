@@ -7,8 +7,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:strix/business_logic/classes/marker.dart';
-import 'package:strix/business_logic/classes/room.dart';
-import 'package:strix/services/game_state/game_state_abstract.dart';
+import 'package:strix/business_logic/classes/static_data.dart';
+import 'package:strix/services/game_state/game_state.dart';
 import 'package:strix/services/service_locator.dart';
 import 'package:tuple/tuple.dart';
 
@@ -17,7 +17,7 @@ import 'next_milestone_logic.dart';
 GameState _gameState = serviceLocator<GameState>();
 
 // TODO: define as constants or get from settings
-const double walkingSpeed = 70.0; // meters/sec
+const double walkingSpeed = 30.0; // meters/sec
 const double carSpeed = 60.0; // meters/sec
 const int mapAnimTimeMs = 1500;
 
@@ -93,7 +93,7 @@ class MapLogic {
                     child: GestureDetector(
                       onTap: () {
                         // save new page number
-                        _gameState.setMarkerTilePage(mapData.markerList.indexOf(markerData));
+                        _gameState.markerTilePage = mapData.markerList.indexOf(markerData);
 
                         // move to correct page, this triggers also a map move
                         pageController.jumpToPage(
@@ -200,11 +200,16 @@ class MapLogic {
           }
         }
 
+        //print("CURRENT POS IN MAP : ${personMarkerData.currentPosition}");
+        //print("POLY POS [0] : ${personMarkerData.polyPositions![0]}");
+
         markers.add(
           Marker(
             width: 35.0,
             height: 35.0,
-            point: personMarkerData.currentPosition, // TODO: Adjust height for pin tip?
+            // TODO: Adjust height for pin tip?
+
+            point: personMarkerData.currentPosition,
             builder: (context) => Opacity(
               opacity: personMarkerData.atLocation ? 0.0 : 1.0,
               child: Container(
@@ -330,9 +335,9 @@ class MovingAnimationState extends State<MovingAnimation> with TickerProviderSta
       mapAnimController.addStatusListener((status) async {
         if (status == AnimationStatus.completed) {
           // save current center position
-          _gameState.setCenterPosition(mapController.center);
+          _gameState.centerPosition = mapController.center;
           // save current current zoom level
-          _gameState.setZoom(mapController.zoom);
+          _gameState.zoom = mapController.zoom;
           // dispose animation controller
           mapAnimController.dispose();
         }
@@ -345,7 +350,7 @@ class MovingAnimationState extends State<MovingAnimation> with TickerProviderSta
       // add listener to dynamically update values
       mapAnimController.addListener(() {
         // get state of map page
-        State? mapPageState = _gameState.getMapState();
+        State? mapPageState = _gameState.mapState;
         // updating state of map screen
 
         if (mapPageState != null) {
@@ -368,7 +373,7 @@ class MovingAnimationState extends State<MovingAnimation> with TickerProviderSta
   }
 
   void startMovingAnimation({
-    required String roomID,
+    //required String roomID,
     required PersonMarkerData personData,
   }) {
     List<LatLng> personPath = personData.positionPath;
@@ -451,17 +456,22 @@ class MovingAnimationState extends State<MovingAnimation> with TickerProviderSta
     positionAnimController.addStatusListener((status) async {
       if (status == AnimationStatus.completed) {
         await Future.delayed(const Duration(seconds: 3));
-        await NextMilestoneLogic().moveToNextMilestone(roomID: roomID);
+        debugPrint("MOVING TO NEXT MILESTONE!");
+        await NextMilestoneLogic().moveToNextMilestone();
         positionAnimController.dispose();
       }
     });
 
     // add listener to dynamically update values
     positionAnimController.addListener(() {
+      //TODO: CHANGE NEEDS TO BE STORED IN LOCAL STATIC DATA
+
       personData.currentPosition = LatLng(
         latAnimation.value,
         longAnimation.value,
       );
+
+      //print("CURRENT POSITION: ${personData.currentPosition}");
 
       // remove waypoints from polyline when animation passes
       if (positionAnimController.value >= weightList[0]) {
@@ -470,8 +480,14 @@ class MovingAnimationState extends State<MovingAnimation> with TickerProviderSta
       }
       personData.polyPositions![0] = personData.currentPosition;
 
+      // // update poly position [0] (animated person position)
+      // personData.polyPositions![0] = LatLng(
+      //   latAnimation.value,
+      //   longAnimation.value,
+      // );
+
       // get state of map page
-      State? mapPageState = _gameState.getMapState();
+      State? mapPageState = _gameState.mapState;
 
       // updating state of map screen
       try {
