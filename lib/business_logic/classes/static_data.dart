@@ -33,21 +33,21 @@ class StaticData {
 class AvailableAssetEntry {
   String entryName;
   Call? call;
-  MissionEntry? mission;
-  MapEntry? map;
-  DataEntry? data;
+  MissionEntry mission;
+  MapEntry map;
+  DataEntry data;
 
   AvailableAssetEntry({
     required this.entryName,
     this.call,
-    this.mission,
-    this.map,
-    this.data,
+    required this.mission,
+    required this.map,
+    required this.data,
   });
 }
 
 class DataEntry {
-  Map<DataType, List<String>> _data = {};
+  Map<DataType, List<DataItem>> _data = {};
 
   // initialize all enum data types with empty lists
   DataEntry() {
@@ -59,14 +59,52 @@ class DataEntry {
   // create lists from dict
   dictToData({required dynamic dict}) {
     for (DataType type in DataType.values) {
-      _data[type] = dict[type.name] == null ? const [] : List.from(dict[type.name]);
+      _data[type] = dict[type.name] == null
+          ? const []
+          : List<DataItem>.generate(
+              dict[type.name].length, (index) => DataItem(fileName: dict[type.name][index]));
     }
   }
 
   // return list from map based on type
-  List<String> getData({required DataType type}) {
+  List<DataItem> getData({required DataType type}) {
     return _data[type] ?? const [];
   }
+
+  // check for new items in data entry
+  bool hasNewData({required bool hasInsta}) {
+    // go through all data types
+    for (DataType type in DataType.values) {
+      // don't check social if group has insta
+      if (!(hasInsta && type == DataType.social)) {
+        // check if any item is new
+        if (_data[type]!.indexWhere((item) => item.isNew == true) != -1) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // check if any data is present
+  bool isEmpty() {
+    for (DataType type in DataType.values) {
+      if (_data[type]!.isNotEmpty) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+class DataItem {
+  String fileName;
+  bool isNew;
+
+  DataItem({
+    required this.fileName,
+    this.isNew = false,
+  });
 }
 
 class MissionEntry {
@@ -77,6 +115,10 @@ class MissionEntry {
     this.profileEntries = const [],
     this.briefing,
   });
+
+  bool hasNewProfiles() {
+    return profileEntries.indexWhere((profile) => profile.isNew == true) == -1 ? false : true;
+  }
 }
 
 class MapEntry {
@@ -87,4 +129,8 @@ class MapEntry {
     this.markerList = const [],
     this.personMarkerList = const [],
   });
+
+  bool hasNewMarkers() {
+    return markerList.indexWhere((marker) => marker.isNew == true) == -1 ? false : true;
+  }
 }

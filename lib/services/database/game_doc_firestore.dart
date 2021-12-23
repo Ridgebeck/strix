@@ -88,13 +88,27 @@ class GameDocFirestore implements GameDoc {
   // method to convert static data from firestore
   List<AvailableAssetEntry> _convertAssets(List<dynamic> assetDictList) {
     List<AvailableAssetEntry> availableAssetsFormatted = [];
+
+    // create previous entry variable to check for changes
+    AvailableAssetEntry previousAssetEntry = AvailableAssetEntry(
+      entryName: "no entry",
+      mission: MissionEntry(),
+      map: MapEntry(),
+      data: DataEntry(),
+    );
+
     // go through all available assets
     for (Map<String, dynamic> entry in assetDictList) {
       // save asset data as map
       Map<String, dynamic> assetData = entry.values.first;
 
       // create empty assetEntry with only the name first
-      AvailableAssetEntry assetEntry = AvailableAssetEntry(entryName: entry.keys.first);
+      AvailableAssetEntry assetEntry = AvailableAssetEntry(
+        entryName: entry.keys.first,
+        mission: MissionEntry(),
+        map: MapEntry(),
+        data: DataEntry(),
+      );
 
       // check if data contains a call,convert to call object and add
       if (assetData.keys.contains('call')) {
@@ -106,18 +120,24 @@ class GameDocFirestore implements GameDoc {
 
       // check if data contains a map entry,convert to map object and add
       if (assetData.keys.contains('map')) {
-        assetEntry.map = MapEntry();
-        // add locations markers if they exist
+        // add location markers if they exist
         if (assetData['map'].keys.contains('locations')) {
-          assetEntry.map!.markerList = [
+          assetEntry.map.markerList = [
             for (Map<String, dynamic> markerDict in assetData['map']['locations'])
               MarkerData.fromDict(markerDict)
           ];
         }
+
+        // check which markers are new
+        for (MarkerData marker in assetEntry.map.markerList) {
+          if (previousAssetEntry.map.markerList.indexWhere((pm) => pm.name == marker.name) == -1) {
+            marker.isNew = true;
+          }
+        }
+
         // add person locations if they exist
-        // TODO: PATH CREATION IN MARKER.DART
         if (assetData['map'].keys.contains('personLocations')) {
-          assetEntry.map!.personMarkerList = [
+          assetEntry.map.personMarkerList = [
             for (Map<String, dynamic> markerDict in assetData['map']['personLocations'])
               PersonMarkerData.fromDict(markerDict)
           ];
@@ -126,26 +146,57 @@ class GameDocFirestore implements GameDoc {
 
       // check if data contains a mission entry,convert to mission object and add
       if (assetData.keys.contains('mission')) {
-        assetEntry.mission = MissionEntry();
         // add profiles if any exists
         if (assetData['mission'].keys.contains('profiles')) {
-          assetEntry.mission!.profileEntries = [
+          assetEntry.mission.profileEntries = [
             for (Map<String, dynamic> profile in assetData['mission']['profiles'])
               Person.fromDict(profile)
           ];
         }
+
+        // check which profiles are new
+        for (Person profile in assetEntry.mission.profileEntries) {
+          if (previousAssetEntry.mission.profileEntries
+                  .indexWhere((p) => p.profileImage == profile.profileImage) ==
+              -1) {
+            profile.isNew = true;
+          }
+        }
+
         // add briefing data if it exists
         if (assetData['mission'].keys.contains('briefing')) {
-          assetEntry.mission!.briefing = assetData['mission']['briefing'];
+          assetEntry.mission.briefing = assetData['mission']['briefing'];
         }
       }
 
       // check if data contains a data entry,convert to data object and add
       if (assetData.keys.contains('data')) {
-        assetEntry.data = DataEntry();
-        assetEntry.data!.dictToData(dict: assetData['data']);
+        assetEntry.data.dictToData(dict: assetData['data']);
       }
+
+      // go through all types of data
+      for (DataType type in DataType.values) {
+        for (DataItem entry in assetEntry.data.getData(type: type)) {
+          // add type specific folder path
+          entry.fileName = type.details.folderPath + entry.fileName;
+          // check if data is new
+          if (previousAssetEntry.data
+                  .getData(type: type)
+                  .indexWhere((item) => item.fileName == entry.fileName) ==
+              -1) {
+            entry.isNew = true;
+          }
+        }
+      }
+
+      // add formatted entry to list
       availableAssetsFormatted.add(assetEntry);
+
+      // only save data when it is not a call
+      if (assetEntry.call == null) {
+        // save current asset entry as previous entry for comparison
+        previousAssetEntry = assetEntry;
+      }
     }
 
     return availableAssetsFormatted;

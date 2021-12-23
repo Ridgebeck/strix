@@ -6,8 +6,6 @@ import 'package:strix/business_logic/classes/dynamic_data.dart';
 import 'package:strix/business_logic/classes/static_data.dart';
 import 'package:strix/business_logic/logic/mission_screen_logic.dart';
 import 'package:strix/config/constants.dart';
-import 'package:strix/services/game_state/game_state.dart';
-import 'package:strix/services/service_locator.dart';
 import 'package:strix/ui/widgets/safe_area_glas_top.dart';
 import 'package:strix/ui/widgets/section_title.dart';
 
@@ -23,15 +21,14 @@ class GameMissionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     print("BUILDING MISSION SCREEN");
 
-    final StaticData? staticData = serviceLocator<GameState>().staticData;
-    MissionEntry? missionData = staticData!.availableAssets[dynamicData.gameProgressID].mission;
+    // get mission data
+    final MissionEntry? missionData = MissionScreenLogic().getMissionData(dynamicData: dynamicData);
 
     // create list for profile data
     List<Widget> profileButtonList = MissionScreenLogic().createProfileList(missionData);
 
     // create list for converted goal data
     List<Widget> goalList = MissionScreenLogic().createGoalList(dynamicData.currentGoals);
-    //missionData);
 
     return missionData == null
         ? const Center(
@@ -50,10 +47,10 @@ class GameMissionScreen extends StatelessWidget {
                       SizedBox(height: MediaQuery.of(context).size.height * kSmallMargin),
                       profileButtonList.isEmpty
                           ? const Center(
-                              child: Text('no profiles available yet'),
+                              child: Text('no profiles available'),
                             )
                           : SizedBox(
-                              height: MediaQuery.of(context).size.width / 6,
+                              height: MediaQuery.of(context).size.width / 4,
                               child: Center(
                                 child: ListView(
                                   physics: const BouncingScrollPhysics(

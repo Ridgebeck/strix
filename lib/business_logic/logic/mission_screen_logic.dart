@@ -1,10 +1,20 @@
 import 'package:flutter/cupertino.dart';
+import 'package:strix/business_logic/classes/dynamic_data.dart';
 import 'package:strix/business_logic/classes/goals.dart';
 import 'package:strix/business_logic/classes/static_data.dart';
 import 'package:strix/config/constants.dart';
+import 'package:strix/services/game_state/game_state.dart';
+import 'package:strix/services/service_locator.dart';
 import 'package:strix/ui/widgets/profile_button.dart';
 
 class MissionScreenLogic {
+  MissionEntry? getMissionData({required DynamicData dynamicData}) {
+    StaticData? staticData = serviceLocator<GameState>().staticData;
+    return staticData == null
+        ? null
+        : staticData.availableAssets[dynamicData.gameProgressID].mission;
+  }
+
   List<Widget> createProfileList(MissionEntry? missionData) {
     if (missionData == null) {
       return [];

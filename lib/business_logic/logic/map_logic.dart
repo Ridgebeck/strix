@@ -10,6 +10,7 @@ import 'package:strix/business_logic/classes/marker.dart';
 import 'package:strix/business_logic/classes/static_data.dart';
 import 'package:strix/services/game_state/game_state.dart';
 import 'package:strix/services/service_locator.dart';
+import 'package:strix/ui/widgets/new_indicator_dot.dart';
 import 'package:tuple/tuple.dart';
 
 import 'next_milestone_logic.dart';
@@ -67,13 +68,13 @@ class MapLogic {
         // change markerSize if selected and/or active
         double adjustedMarkerSize = markerSize;
         double adjustedIndicatorSize = personIndicatorSize;
-        if (markerData.selected) {
-          if (markerData.active) {
+        if (markerData.isSelected) {
+          if (markerData.isActive) {
             adjustedMarkerSize = markerSize * selectedMarkerFactor;
             adjustedIndicatorSize = personIndicatorSize * selectedMarkerFactor;
           }
         } else {
-          if (markerData.active == false) {
+          if (markerData.isActive == false) {
             adjustedMarkerSize = markerSize * inactiveMarkerFactor;
             adjustedIndicatorSize = personIndicatorSize * inactiveMarkerFactor;
           }
@@ -81,101 +82,99 @@ class MapLogic {
         markers.add(
           Marker(
             anchorPos: AnchorPos.align(AnchorAlign.top),
-            width: adjustedMarkerSize + 200,
-            height: adjustedMarkerSize + adjustedIndicatorSize / 2,
+            width: adjustedMarkerSize,
+            height: adjustedMarkerSize,
             point: markerData.position,
-            builder: (context) => Stack(
-              children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(100, adjustedIndicatorSize / 2, 100, 0),
-                  child: Container(
-                    key: Key(markerData.name),
-                    child: GestureDetector(
-                      onTap: () {
-                        // save new page number
-                        _gameState.markerTilePage = mapData.markerList.indexOf(markerData);
+            builder: (context) => Container(
+              key: Key(markerData.name),
+              child: GestureDetector(
+                onTap: () {
+                  // save new page number
+                  _gameState.markerTilePage = mapData.markerList.indexOf(markerData);
 
-                        // move to correct page, this triggers also a map move
-                        pageController.jumpToPage(
-                          mapData.markerList.length * 100 + mapData.markerList.indexOf(markerData),
-                        );
-                      },
-                      child: LayoutBuilder(
-                          builder: (BuildContext context, BoxConstraints constraints) {
-                        double maxWidth = constraints.maxWidth;
-                        double maxHeight = constraints.maxHeight;
-                        return Stack(
-                          children: [
-                            // create glow if maker is selected
-                            markerData.selected
-                                ? Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: markerData.active
-                                              ? markerData.type.color.withOpacity(0.5)
-                                              : Colors.grey.withOpacity(0.5),
-                                          blurRadius: 10.0,
-                                        )
-                                      ],
-                                    ),
+                  // move to correct page, this triggers also a map move
+                  pageController.jumpToPage(
+                    mapData.markerList.length * 100 + mapData.markerList.indexOf(markerData),
+                  );
+                },
+                child: LayoutBuilder(builder: (BuildContext context, BoxConstraints constraints) {
+                  double maxWidth = constraints.maxWidth;
+                  double maxHeight = constraints.maxHeight;
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // create glow if maker is selected
+                      markerData.isSelected
+                          ? Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: markerData.isActive
+                                        ? markerData.type.color.withOpacity(0.5)
+                                        : Colors.grey.withOpacity(0.5),
+                                    blurRadius: 10.0,
                                   )
-                                // otherwise don't add glow
-                                : Container(),
+                                ],
+                              ),
+                            )
+                          // otherwise don't add glow
+                          : Container(),
 
-                            // solid colored background pin icon
-                            Center(
-                              child: FaIcon(
-                                FontAwesomeIcons.mapMarker,
-                                color: markerData.active ? markerData.type.color : Colors.grey,
-                                size: maxHeight,
-                              ),
-                            ),
+                      // solid colored background pin icon
+                      Center(
+                        child: FaIcon(
+                          FontAwesomeIcons.mapMarker,
+                          color: markerData.isActive ? markerData.type.color : Colors.grey,
+                          size: maxHeight,
+                        ),
+                      ),
 
-                            // add marker type icon
-                            Positioned(
-                              left: maxWidth / 2 - maxWidth / (2.2 * 2),
-                              top: maxHeight / 2.2 - maxHeight / (2.2 * 2),
-                              child: Icon(
-                                markerData.type.icon,
-                                color: Colors.white,
-                                size: maxHeight / 2.2,
-                              ),
-                            ),
-                          ],
-                        );
-                      }),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 0.0,
-                  left: 100.0 + adjustedMarkerSize * 1 / 2,
-                  child: Row(
-                    children: List.generate(
-                      markerData.personsHere.length,
-                      (index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 5.0),
-                          child: Container(
-                            width: adjustedIndicatorSize,
-                            height: adjustedIndicatorSize,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                image: AssetImage('assets/profile_pictures/' +
-                                    markerData.personsHere[index].profileImage),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
+                      // add marker type icon
+                      Positioned(
+                        left: maxWidth / 2 - maxWidth / (2.2 * 2),
+                        top: maxHeight / 2.2 - maxHeight / (2.2 * 2),
+                        child: Icon(
+                          markerData.type.icon,
+                          color: Colors.white,
+                          size: maxHeight / 2.2,
+                        ),
+                      ),
+                      Positioned(
+                        top: -15.0,
+                        left: 20 - markerData.personsHere.length * (adjustedIndicatorSize + 5.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: List.generate(
+                            markerData.personsHere.length,
+                            (index) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 5.0),
+                                child: Container(
+                                  width: adjustedIndicatorSize,
+                                  height: adjustedIndicatorSize,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    image: DecorationImage(
+                                      image: AssetImage('assets/profile_pictures/' +
+                                          markerData.personsHere[index].profileImage),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
+                        ),
+                      ),
+                      NewIndicatorDot(
+                        newData: markerData.isNew,
+                        isInside: true,
+                      ),
+                    ],
+                  );
+                }),
+              ),
             ),
           ),
         );
@@ -207,8 +206,6 @@ class MapLogic {
           Marker(
             width: 35.0,
             height: 35.0,
-            // TODO: Adjust height for pin tip?
-
             point: personMarkerData.currentPosition,
             builder: (context) => Opacity(
               opacity: personMarkerData.atLocation ? 0.0 : 1.0,
@@ -455,16 +452,19 @@ class MovingAnimationState extends State<MovingAnimation> with TickerProviderSta
     // move to next milestone when animation is finished
     positionAnimController.addStatusListener((status) async {
       if (status == AnimationStatus.completed) {
+        // wait 3 seconds after person arrives
         await Future.delayed(const Duration(seconds: 3));
         debugPrint("MOVING TO NEXT MILESTONE!");
         await NextMilestoneLogic().moveToNextMilestone();
         positionAnimController.dispose();
+        await Future.delayed(const Duration(seconds: 1));
+        _gameState.isPersonMoving = false;
       }
     });
 
     // add listener to dynamically update values
     positionAnimController.addListener(() {
-      //TODO: CHANGE NEEDS TO BE STORED IN LOCAL STATIC DATA
+      //TODO: CHANGE NEEDS TO BE STORED IN LOCAL STATIC DATA?
 
       personData.currentPosition = LatLng(
         latAnimation.value,

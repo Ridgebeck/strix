@@ -54,8 +54,9 @@ class MarkerData {
   LatLng position;
   MarkerTypeData type;
   String? infoText;
-  bool selected;
-  bool active;
+  bool isSelected;
+  bool isActive;
+  bool isNew;
   List<Person> personsHere;
 
   MarkerData({
@@ -63,8 +64,9 @@ class MarkerData {
     required this.position,
     required this.type,
     this.infoText,
-    this.selected = false,
-    this.active = true,
+    this.isSelected = false,
+    this.isActive = true,
+    this.isNew = false,
     this.personsHere = const [],
   });
 

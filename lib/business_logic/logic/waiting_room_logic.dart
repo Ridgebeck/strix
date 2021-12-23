@@ -11,7 +11,7 @@ class WaitingRoomLogic {
 
   // provide stream of dynamic data to UI
   Stream<DynamicData?> dynamicDataStream({required String roomID}) {
-    // check if returned data from stream makes sense
+    // TODO: check if returned data from stream makes sense
     return _gameDoc.getDataStream(roomID: roomID);
   }
 

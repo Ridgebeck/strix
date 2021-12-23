@@ -24,6 +24,6 @@ Future<void> setupServices() async {
   // handle authorization via firebase auth
   serviceLocator.registerLazySingleton<Authorization>(() => AuthorizationFirebase());
   // interact with screen independent variables
-  // TODO: SINGLETON?
+  // TODO: SINGLETON CORRECT?
   serviceLocator.registerLazySingleton<GameState>(() => GameState());
 }

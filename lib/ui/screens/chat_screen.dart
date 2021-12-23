@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -8,55 +7,34 @@ import 'package:strix/business_logic/classes/chat.dart';
 import 'package:strix/business_logic/classes/player.dart';
 import 'package:strix/business_logic/logic/chat_room_logic.dart';
 import 'package:strix/config/constants.dart';
+import 'package:strix/services/authorization/authorization_abstract.dart';
 import 'package:strix/services/game_state/game_state.dart';
 import 'package:strix/services/service_locator.dart';
-import 'package:strix/services/authorization/authorization_abstract.dart';
 import 'package:strix/ui/widgets/chat_message.dart';
 
+// TODO: constants
 const double kTextFieldHeight = 65;
 const double kTopChatAreaHeight = 80;
 
-class ChatScreen extends StatefulWidget {
-  const ChatScreen({
+class ChatScreen extends StatelessWidget {
+  final String roomID;
+
+  ChatScreen({
     Key? key,
+    required this.roomID,
   }) : super(key: key);
-
-  @override
-  State<ChatScreen> createState() => _ChatScreenState();
-}
-
-class _ChatScreenState extends State<ChatScreen> {
-  final GameState _gameState = serviceLocator<GameState>();
-  final String roomID = serviceLocator<GameState>().staticData == null
-      ? "123456"
-      : serviceLocator<GameState>().staticData!.roomID;
-  final int maxInputChar = serviceLocator<GameState>().staticData == null
-      ? 200
-      : serviceLocator<GameState>().staticData!.maximumInputCharacters;
 
   final _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final Authorization _authorization = serviceLocator<Authorization>();
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    // set chat screen state so that it can be updated externally
-    _gameState.chatScreenState = this;
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
+  final int maxInputChar = serviceLocator<GameState>().staticData == null
+      ? 200
+      : serviceLocator<GameState>().staticData!.maximumInputCharacters;
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-        stream: ChatRoomLogic().chatStream(roomID: roomID),
-        // TODO: use initial data instead of empty container?
-        //initialData: ,
+    return StreamBuilder<Chat?>(
+        stream: ChatRoomLogic().getChatStream(roomID: roomID),
         builder: (BuildContext context, AsyncSnapshot<Chat?> snapshot) {
           Chat? chatData = snapshot.data;
           // handle chat data being null
@@ -72,6 +50,7 @@ class _ChatScreenState extends State<ChatScreen> {
             }
           }
 
+          //TODO: delay + typing?
           // create reduced list and delay specific bot message
           List<Message> reducedList = ChatRoomLogic().createReducedList(chatData.messages.toList());
 
@@ -280,13 +259,16 @@ class _ChatScreenState extends State<ChatScreen> {
                               TextButton(
                                 onPressed: () {
                                   if (_textController.text.isNotEmpty) {
+                                    // add message to firestore
                                     ChatRoomLogic()
                                         .addMessage(roomID: roomID, text: _textController.text);
+                                    // clear the message field
                                     _textController.clear();
+                                    // animate to newest message if scrolled up
                                     _scrollController.animateTo(
                                       0.0,
                                       curve: Curves.easeOut,
-                                      duration: const Duration(milliseconds: 300),
+                                      duration: const Duration(milliseconds: 400),
                                     );
                                   }
                                 },

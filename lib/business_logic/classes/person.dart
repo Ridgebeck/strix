@@ -10,6 +10,7 @@ class Person {
   String? instagram;
   String? hobbies;
   Color? color;
+  bool isNew;
 
   Person({
     required this.firstName,
@@ -21,6 +22,7 @@ class Person {
     this.instagram,
     this.hobbies,
     this.color,
+    this.isNew = false,
   });
 
   factory Person.fromDict(dynamic dict) {

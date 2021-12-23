@@ -40,15 +40,16 @@ const String kWaitingStatus = 'waiting';
 const selectedGameID = 1;
 
 // tab indices
-int kMissionTabIndex = 0;
-int kMapTabIndex = 1;
-int kDataTabIndex = 2;
-int kChatTabIndex = 3;
+const int kTabLength = 4;
+const int kMissionTabIndex = 0;
+const int kMapTabIndex = 1;
+const int kDataTabIndex = 2;
+const int kChatTabIndex = 3;
 
 const Color kBackgroundColor = Color.fromRGBO(230, 230, 235, 1.0);
 const Color kBackgroundColorLight = Color.fromRGBO(238, 238, 245, 1.0);
 const Color kCardColorLight = Color.fromRGBO(255, 255, 255, 1.0);
-//const Color kAccentColor = Color.fromRGBO(252, 3, 173, 1.0);
+const Color kNewIndicatorColor = Colors.lightGreenAccent;
 const Color kAccentColor = Colors.greenAccent;
 const Color kSplashColor = Color.fromRGBO(252, 3, 173, 1.0);
 const Color kTextColorDark = Color.fromRGBO(60, 60, 60, 1.0);

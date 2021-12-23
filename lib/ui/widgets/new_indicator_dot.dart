@@ -5,15 +5,28 @@ class NewIndicatorDot extends StatelessWidget {
   const NewIndicatorDot({
     Key? key,
     required this.newData,
+    this.isInside = false,
+    this.isLeft = false,
   }) : super(key: key);
 
   final bool newData;
+  final bool isInside;
+  final bool isLeft;
 
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      right: -10.0,
-      top: -10.0,
+      left: isLeft
+          ? isInside
+              ? 5.0
+              : -8.0
+          : null,
+      right: isLeft
+          ? null
+          : isInside
+              ? 5.0
+              : -8.0,
+      top: isInside ? 5.0 : -8.0,
       child: Visibility(
         visible: //tabController.index == index ? false : false,
             newData ? true : false,

@@ -5,20 +5,18 @@ import 'package:strix/business_logic/classes/chat.dart';
 import 'package:strix/business_logic/classes/player.dart';
 import 'package:strix/services/game_state/game_state.dart';
 import 'package:strix/services/service_locator.dart';
-//import 'package:strix/services/authorization/authorization_abstract.dart';
 import 'package:strix/services/database/game_doc_abstract.dart';
 
 class ChatRoomLogic {
   final GameDoc _gameDoc = serviceLocator<GameDoc>();
   final GameState _gameState = serviceLocator<GameState>();
-  //final Authorization _authorization = serviceLocator<Authorization>();
 
-  // provide stream of chat data to UI
-  Stream<Chat?> chatStream({required String roomID}) {
+  // provide chat stream to UI
+  Stream<Chat?> getChatStream({required String roomID}) {
     return _gameDoc.getChatStream(roomID: roomID);
   }
 
-  // provide stream of game room to UI
+  // add message to firestore
   void addMessage({required String roomID, required String text}) {
     // create message object with current user as player
     Message message = Message(

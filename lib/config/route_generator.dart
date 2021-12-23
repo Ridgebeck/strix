@@ -3,7 +3,7 @@ import 'package:strix/business_logic/classes/call.dart';
 import 'package:strix/business_logic/classes/person.dart';
 import 'package:strix/ui/screens/briefing_screen.dart';
 import 'package:strix/ui/screens/call_screen.dart';
-import 'package:strix/ui/screens/icoming_call_screen.dart';
+import 'package:strix/ui/screens/incoming_call_screen.dart';
 import 'package:strix/ui/screens/join_room_screen.dart';
 import 'package:strix/ui/screens/landing_screen.dart';
 import 'package:strix/ui/screens/picture_screen.dart';
